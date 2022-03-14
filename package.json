@@ -1,0 +1,27 @@
+{
+  "name": "greenmove-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon ./index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/greenmove-io/greenmove-backend.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/greenmove-io/greenmove-backend/issues"
+  },
+  "homepage": "https://github.com/greenmove-io/greenmove-backend#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "nnode": "^0.3.3",
+    "nodemon": "^2.0.15",
+    "sqlite3": "^5.0.2"
+  }
+}
