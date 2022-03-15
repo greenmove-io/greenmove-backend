@@ -1,7 +1,9 @@
 import express from 'express';
 import dao from './repositories/dao';
+import { FillDatabase } from './utils/FillDatabase.js';
 // import {  } from './controllers/auth.controller';
 import { testRoutes } from './routes';
+
 
 import cors from 'cors';
 const app = express();
@@ -11,6 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 dao.setupDbForDev();
+FillDatabase();
 
 app.use('/test', testRoutes);
 
