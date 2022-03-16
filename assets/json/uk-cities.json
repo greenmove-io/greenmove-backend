@@ -1,347 +1,307 @@
 [
   {
-    "City": "Aberdeen",
-    "Country": "Scotland",
-    "County": "Aberdeen"
+    "city": "Aberdeen",
+    "country": "Scotland",
+    "county": "Aberdeen"
   },
   {
-    "City": "Armagh",
-    "Country": "Northern Ireland",
-    "County": "County Armagh"
+    "city": "Bangor",
+    "country": "Wales",
+    "county": "Gwynedd"
   },
   {
-    "City": "Bangor",
-    "Country": "Wales",
-    "County": "Gwynedd"
+    "city": "Bath",
+    "country": "England",
+    "county": "Somerset"
   },
   {
-    "City": "Bath",
-    "Country": "England",
-    "County": "Somerset"
+    "city": "Belfast",
+    "country": "Northern Ireland",
+    "county": "Antrim"
   },
   {
-    "City": "Belfast",
-    "Country": "Northern Ireland",
-    "County": "County Antrim"
+    "city": "Birmingham",
+    "country": "England",
+    "county": "West Midlands"
   },
   {
-    "City": "Birmingham",
-    "Country": "England",
-    "County": "West Midlands"
+    "city": "Bradford",
+    "country": "England",
+    "county": "West Yorkshire"
   },
   {
-    "City": "Bradford",
-    "Country": "England",
-    "County": "West Yorkshire"
+    "city": "Bristol",
+    "country": "England",
+    "county": "Bristol"
   },
   {
-    "City": "Brighton and Hove",
-    "Country": "England",
-    "County": "East Sussex"
+    "city": "Cambridge",
+    "country": "England",
+    "county": "Cambridgeshire"
   },
   {
-    "City": "Bristol",
-    "Country": "England",
-    "County": "Bristol"
+    "city": "Canterbury",
+    "country": "England",
+    "county": "Kent"
   },
   {
-    "City": "Cambridge",
-    "Country": "England",
-    "County": "Cambridgeshire"
+    "city": "Caerdydd",
+    "country": "Wales",
+    "county": "Cardiff"
   },
   {
-    "City": "Canterbury",
-    "Country": "England",
-    "County": "Kent"
+    "city": "Carlisle",
+    "country": "England",
+    "county": "Cumbria"
   },
   {
-    "City": "Cardiff",
-    "Country": "Wales",
-    "County": "Glamorgan"
+    "city": "Chelmsford",
+    "country": "England",
+    "county": "Essex"
   },
   {
-    "City": "Carlisle",
-    "Country": "England",
-    "County": "Cumbria"
+    "city": "Chester",
+    "country": "England",
+    "county": "Cheshire"
   },
   {
-    "City": "Chelmsford",
-    "Country": "England",
-    "County": "Essex"
+    "city": "Chichester",
+    "country": "England",
+    "county": "West Sussex"
   },
   {
-    "City": "Chester",
-    "Country": "England",
-    "County": "Cheshire"
+    "city": "Coventry",
+    "country": "England",
+    "county": "West Midlands"
   },
   {
-    "City": "Chichester",
-    "Country": "England",
-    "County": "West Sussex"
+    "city": "Derby",
+    "country": "England",
+    "county": "Derbyshire"
   },
   {
-    "City": "Coventry",
-    "Country": "England",
-    "County": "West Midlands"
+    "city": "Dundee",
+    "country": "Scotland",
+    "county": "Dundee"
   },
   {
-    "City": "Derby",
-    "Country": "England",
-    "County": "Derbyshire"
+    "city": "Durham",
+    "country": "England",
+    "county": "Durham"
   },
   {
-    "City": "Dundee",
-    "Country": "Scotland",
-    "County": "Dundee"
+    "city": "Edinburgh",
+    "country": "Scotland",
+    "county": "Edinburgh"
   },
   {
-    "City": "Durham",
-    "Country": "England",
-    "County": "Durham"
+    "city": "Ely",
+    "country": "England",
+    "county": "Cambridgeshire"
   },
   {
-    "City": "Edinburgh",
-    "Country": "Scotland",
-    "County": "Edinburgh"
+    "city": "Exeter",
+    "country": "England",
+    "county": "Devon"
   },
   {
-    "City": "Ely",
-    "Country": "England",
-    "County": "Cambridgeshire"
+    "city": "Glasgow",
+    "country": "Scotland",
+    "county": "Glasgow"
   },
   {
-    "City": "Exeter",
-    "Country": "England",
-    "County": "Devon"
+    "city": "Gloucester",
+    "country": "England",
+    "county": "Gloucestershire"
   },
   {
-    "City": "Glasgow",
-    "Country": "Scotland",
-    "County": "Glasgow"
+    "city": "Hereford",
+    "country": "England",
+    "county": "Herefordshire"
   },
   {
-    "City": "Gloucester",
-    "Country": "England",
-    "County": "Gloucestershire"
+    "city": "Inverness",
+    "country": "Scotland",
+    "county": "Highland"
   },
   {
-    "City": "Hereford",
-    "Country": "England",
-    "County": "Herefordshire"
+    "city": "Kingston upon Hull",
+    "country": "England",
+    "county": "East Riding of Yorkshire"
   },
   {
-    "City": "Inverness",
-    "Country": "Scotland",
-    "County": "Highland"
+    "city": "Lancaster",
+    "country": "England",
+    "county": "Lancashire"
   },
   {
-    "City": "Kingston upon Hull",
-    "Country": "England",
-    "County": "East Riding of Yorkshire"
+    "city": "Leeds",
+    "country": "England",
+    "county": "West Yorkshire"
   },
   {
-    "City": "Lancaster",
-    "Country": "England",
-    "County": "Lancashire"
+    "city": "Leicester",
+    "country": "England",
+    "county": "Leicestershire"
   },
   {
-    "City": "Leeds",
-    "Country": "England",
-    "County": "West Yorkshire"
+    "city": "Lichfield",
+    "country": "England",
+    "county": "Staffordshire"
   },
   {
-    "City": "Leicester",
-    "Country": "England",
-    "County": "Leicestershire"
+    "city": "Lincoln",
+    "country": "England",
+    "county": "Lincolnshire"
   },
   {
-    "City": "Lichfield",
-    "Country": "England",
-    "County": "Staffordshire"
+    "city": "Lisburn",
+    "country": "Northern Ireland",
+    "county": "Antrim"
   },
   {
-    "City": "Lincoln",
-    "Country": "England",
-    "County": "Lincolnshire"
+    "city": "Liverpool",
+    "country": "England",
+    "county": "Merseyside"
   },
   {
-    "City": "Lisburn",
-    "Country": "Northern Ireland",
-    "County": "County Antrim"
+    "city": "London",
+    "country": "England",
+    "county": "London"
   },
   {
-    "City": "Liverpool",
-    "Country": "England",
-    "County": "Merseyside"
+    "city": "Manchester",
+    "country": "England",
+    "county": "Greater Manchester"
   },
   {
-    "City": "London",
-    "Country": "England",
-    "County": "London"
+    "city": "Newcastle",
+    "country": "England",
+    "county": "Tyne and Wear"
   },
   {
-    "City": "Londonderry",
-    "Country": "Northern Ireland",
-    "County": "County Londonderry"
+    "city": "Newport",
+    "country": "Wales",
+    "county": "Newport city"
   },
   {
-    "City": "Manchester",
-    "Country": "England",
-    "County": "Greater Manchester"
+    "city": "Norwich",
+    "country": "England",
+    "county": "Norfolk"
   },
   {
-    "City": "Newcastle upon Tyne",
-    "Country": "England",
-    "County": "Tyne and Wear"
+    "city": "Nottingham",
+    "country": "England",
+    "county": "Nottinghamshire"
   },
   {
-    "City": "Newport",
-    "Country": "Wales",
-    "County": "Newport City"
+    "city": "Oxford",
+    "country": "England",
+    "county": "Oxfordshire"
   },
   {
-    "City": "Newry",
-    "Country": "Northern Ireland",
-    "County": "County Down"
+    "city": "Perth",
+    "country": "Scotland",
+    "county": "Perth and Kinross"
   },
   {
-    "City": "Norwich",
-    "Country": "England",
-    "County": "Norfolk"
+    "city": "Peterborough",
+    "country": "England",
+    "county": "Cambridgeshire"
   },
   {
-    "City": "Nottingham",
-    "Country": "England",
-    "County": "Nottinghamshire"
+    "city": "Plymouth",
+    "country": "England",
+    "county": "Devon"
   },
   {
-    "City": "Oxford",
-    "Country": "England",
-    "County": "Oxfordshire"
+    "city": "Portsmouth",
+    "country": "England",
+    "county": "Hampshire"
   },
   {
-    "City": "Perth",
-    "Country": "Scotland",
-    "County": "Perth and Kinross"
+    "city": "Preston",
+    "country": "England",
+    "county": "Lancashire"
   },
   {
-    "City": "Peterborough",
-    "Country": "England",
-    "County": "Cambridgeshire"
+    "city": "Ripon",
+    "country": "England",
+    "county": "North Yorkshire"
   },
   {
-    "City": "Plymouth",
-    "Country": "England",
-    "County": "Devon"
+    "city": "Salford",
+    "country": "England",
+    "county": "Greater Manchester"
   },
   {
-    "City": "Portsmouth",
-    "Country": "England",
-    "County": "Hampshire"
+    "city": "Salisbury",
+    "country": "England",
+    "county": "Wiltshire"
   },
   {
-    "City": "Preston",
-    "Country": "England",
-    "County": "Lancashire"
+    "city": "Sheffield",
+    "country": "England",
+    "county": "South Yorkshire"
   },
   {
-    "City": "Ripon",
-    "Country": "England",
-    "County": "North Yorkshire"
+    "city": "Southampton",
+    "country": "England",
+    "county": "Hampshire"
   },
   {
-    "City": "Salford",
-    "Country": "England",
-    "County": "Greater Manchester"
+    "city": "Stirling",
+    "country": "Scotland",
+    "county": "Stirlingshire"
   },
   {
-    "City": "Salisbury",
-    "Country": "England",
-    "County": "Wiltshire"
+    "city": "Stoke-on-Trent",
+    "country": "England",
+    "county": "Staffordshire"
   },
   {
-    "City": "Sheffield",
-    "Country": "England",
-    "County": "South Yorkshire"
+    "city": "Sunderland",
+    "country": "England",
+    "county": "Tyne and Wear"
   },
   {
-    "City": "Southampton",
-    "Country": "England",
-    "County": "Hampshire"
+    "city": "Abertawe",
+    "country": "Wales",
+    "county": "Swansea"
   },
   {
-    "City": "St Albans",
-    "Country": "England",
-    "County": "Hertfordshire"
+    "city": "Truro",
+    "country": "England",
+    "county": "Cornwall"
   },
   {
-    "City": "St Asaph (Llanelwy)",
-    "Country": "Wales",
-    "County": "Denbighshire"
+    "city": "Wakefield",
+    "country": "England",
+    "county": "West Yorkshire"
   },
   {
-    "City": "St Davids",
-    "Country": "Wales",
-    "County": "Pembrokeshire"
+    "city": "Wells",
+    "country": "England",
+    "county": "Somerset"
   },
   {
-    "City": "Stirling",
-    "Country": "Scotland",
-    "County": "Stirlingshire"
+    "city": "Winchester",
+    "country": "England",
+    "county": "Hampshire"
   },
   {
-    "City": "Stoke-on-Trent",
-    "Country": "England",
-    "County": "Staffordshire"
+    "city": "Wolverhampton",
+    "country": "England",
+    "county": "West Midlands"
   },
   {
-    "City": "Sunderland",
-    "Country": "England",
-    "County": "Tyne and Wear"
+    "city": "Worcester",
+    "country": "England",
+    "county": "Worcestershire"
   },
   {
-    "City": "Swansea",
-    "Country": "Wales",
-    "County": "Swansea"
-  },
-  {
-    "City": "Truro",
-    "Country": "England",
-    "County": "Cornwall"
-  },
-  {
-    "City": "Wakefield",
-    "Country": "England",
-    "County": "West Yorkshire"
-  },
-  {
-    "City": "Wells",
-    "Country": "England",
-    "County": "Somerset"
-  },
-  {
-    "City": "Westminster",
-    "Country": "England",
-    "County": "London"
-  },
-  {
-    "City": "Winchester",
-    "Country": "England",
-    "County": "Hampshire"
-  },
-  {
-    "City": "Wolverhampton",
-    "Country": "England",
-    "County": "West Midlands"
-  },
-  {
-    "City": "Worcester",
-    "Country": "England",
-    "County": "Worcestershire"
-  },
-  {
-    "City": "York",
-    "Country": "England",
-    "County": "North Yorkshire"
+    "city": "York",
+    "country": "England",
+    "county": "North Yorkshire"
   }
 ]

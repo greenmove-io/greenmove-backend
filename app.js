@@ -12,8 +12,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-dao.setupDbForDev();
-FillDatabase();
+dao.setupDbForDev().then(res => {
+  console.log(res);
+  FillDatabase();
+}).catch(err => {
+  console.log(err);
+});
+
 
 app.use('/test', testRoutes);
 

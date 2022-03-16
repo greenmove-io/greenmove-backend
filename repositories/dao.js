@@ -48,11 +48,15 @@ export default class {
     }
 
     static async setupDbForDev() {
+      return new Promise((res, rej) => {
         db.serialize(() => {
             const stmts = [
                 `CREATE TABLE IF NOT EXISTS cities (
                   city_id BLOB PRIMARY KEY,
                   name TEXT,
+                  county TEXT,
+                  country TEXT,
+                  is_capital INTEGER,
                   CONSTRAINT city_unique UNIQUE (city_id, name)
                 )`,
                 `CREATE TABLE IF NOT EXISTS city_data (
@@ -62,16 +66,19 @@ export default class {
                   lng INTEGER,
                   pop INTEGER,
                   air_quality INTEGER,
-                  FOREIGN KEY(city_id) REFERENCES cities(city_id)
+                  FOREIGN KEY(city_id) REFERENCES cities(city_id) ON DELETE CASCADE
                 )`,
             ];
 
             this.runBatch(stmts).then(results => {
-                console.log('City tables created successfully');
+                res(`Database has setup successfully`);
             }).catch(err => {
-                console.error('BATCH FAILED ' + err);
+                rej(`BATCH TABLE CREATION FAILED: ${err}`);
             });
+
+            db.run("PRAGMA foreign_keys = ON");
         });
         // db.close();
+      });
     }
 }
