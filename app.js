@@ -1,6 +1,6 @@
 import express from 'express';
 import dao from './repositories/dao';
-import { FillDatabase } from './utils/FillDatabase.js';
+import { FillDatabase, UpdateDatabase } from './utils';
 // import {  } from './controllers/auth.controller';
 import { testRoutes } from './routes';
 
@@ -13,8 +13,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 dao.setupDbForDev().then(res => {
-  console.log(res);
-  FillDatabase();
+  console.log(res.msg);
+  if(!!!res.data) {
+    FillDatabase();
+  } else {
+    console.log('All city data is set');
+    UpdateDatabase();
+  }
 }).catch(err => {
   console.log(err);
 });

@@ -17,8 +17,7 @@ const CITY_DATA = require('../assets/json/uk-cities.json');
 // ];
 
 const required_props = ['is_capital', 'latitude', 'longitude', 'population', 'overall_aqi'];
-
-const fillCityStatements = async () => {
+const fillCityStatements = async (ct) => {
   return Promise.all(
     CITY_DATA.map((city) => {
       return new Promise( async (res, rej) => {
@@ -27,9 +26,10 @@ const fillCityStatements = async () => {
             for(let prop of required_props) {
               cityData[prop] ??= null;
             }
+
             let cityID = crypto.randomBytes(8).toString("hex");
             res({
-                core: `INSERT INTO cities (city_id, name, county, country, is_capital) VALUES ('${cityID}', '${city.city}', '${city.county}', '${city.country}', ${+cityData.is_capital})`,
+                core: `INSERT INTO cities (city_id, name, county, country, is_capital, last_updated) VALUES ('${cityID}', '${city.city}', '${city.county}', '${city.country}', ${+cityData.is_capital}, ${ct})`,
                 data: `INSERT INTO city_data (city_id, lat, lng, pop, air_quality) VALUES ('${cityID}', ${cityData.latitude}, ${cityData.longitude}, ${cityData.population}, ${cityData.overall_aqi})`
             });
           } else {
@@ -47,31 +47,29 @@ const fillCityStatements = async () => {
   })
 }
 
-export const FillDatabase = async () => {
+const FillDatabase = async () => {
   let isDatabaseFilled = await repository.checkCityData();
-  if(!!!isDatabaseFilled.isData) {
-    console.log('Filling the database');
-    let coreStmts = [];
-    let dataStmts = [];
-    let stmts = await fillCityStatements();
+  console.log('Filling the database');
+  const currentTime = Date.now();
+  let coreStmts = [];
+  let dataStmts = [];
+  let stmts = await fillCityStatements(currentTime);
 
-    for(let stmt of stmts) {
-      coreStmts.push(stmt.core);
-      dataStmts.push(stmt.data);
-    }
-
-    repository.insertCities(coreStmts).then(results => {
-        console.log('Inserted cities successfully');
-
-        repository.insertCities(dataStmts).then(results => {
-            console.log('Inserted city data successfully');
-        }).catch(err => {
-            console.error('BATCH FAILED ' + err);
-        });
-    }).catch(err => {
-        console.error('BATCH FAILED ' + err);
-    });
-  } else {
-    console.log('All city data is set');
+  for(let stmt of stmts) {
+    coreStmts.push(stmt.core);
+    dataStmts.push(stmt.data);
   }
+
+  // repository.changeCities(coreStmts).then(results => {
+  //     console.log('Inserted cities successfully');
+  //
+  //     repository.changeCities(dataStmts).then(results => {
+  //         console.log('Inserted city data successfully');
+  //     }).catch(err => {
+  //         console.error('BATCH FAILED ' + err);
+  //     });
+  // }).catch(err => {
+  //     console.error('BATCH FAILED ' + err);
+  // });
 }
+export default FillDatabase;

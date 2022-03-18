@@ -57,6 +57,7 @@ export default class {
                   county TEXT,
                   country TEXT,
                   is_capital INTEGER,
+                  last_updated INTEGER,
                   CONSTRAINT city_unique UNIQUE (city_id, name)
                 )`,
                 `CREATE TABLE IF NOT EXISTS city_data (
@@ -70,10 +71,11 @@ export default class {
                 )`,
             ];
 
-            this.runBatch(stmts).then(results => {
-                res(`Database has setup successfully`);
+            this.runBatch(stmts).then(async (results) => {
+              let dbData = await this.get(`SELECT EXISTS (SELECT name FROM cities) as isData`, []);
+              res({msg: `Database has setup successfully`, data: dbData.isData});
             }).catch(err => {
-                rej(`BATCH TABLE CREATION FAILED: ${err}`);
+              rej(`BATCH TABLE CREATION FAILED: ${err}`);
             });
 
             db.run("PRAGMA foreign_keys = ON");
