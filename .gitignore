@@ -6,10 +6,7 @@
 
 # testing
 **/coverage
-
-# next.js
-**/.next/
-**/out/
+**/assets/hidden
 
 # production
 **/build
@@ -31,6 +28,3 @@
 **.env.development.local
 **.env.test.local
 **.env.production.local
-
-# vercel
-**.vercel

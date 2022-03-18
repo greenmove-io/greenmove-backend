@@ -60,16 +60,16 @@ const FillDatabase = async () => {
     dataStmts.push(stmt.data);
   }
 
-  // repository.changeCities(coreStmts).then(results => {
-  //     console.log('Inserted cities successfully');
-  //
-  //     repository.changeCities(dataStmts).then(results => {
-  //         console.log('Inserted city data successfully');
-  //     }).catch(err => {
-  //         console.error('BATCH FAILED ' + err);
-  //     });
-  // }).catch(err => {
-  //     console.error('BATCH FAILED ' + err);
-  // });
+  repository.changeCities(coreStmts).then(results => {
+      console.log('Inserted cities successfully');
+
+      repository.changeCities(dataStmts).then(results => {
+          console.log('Inserted city data successfully');
+      }).catch(err => {
+          console.error('BATCH FAILED ' + err);
+      });
+  }).catch(err => {
+      console.error('BATCH FAILED ' + err);
+  });
 }
 export default FillDatabase;

@@ -1,6 +1,6 @@
 import express from 'express';
 import dao from './repositories/dao';
-import { FillDatabase, UpdateDatabase } from './utils';
+import { FillDatabase, UpdateDatabase, ProcessNPTA } from './utils';
 // import {  } from './controllers/auth.controller';
 import { testRoutes } from './routes';
 
@@ -12,6 +12,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
+
+// Database Setup
 dao.setupDbForDev().then(res => {
   console.log(res.msg);
   if(!!!res.data) {
@@ -24,6 +26,8 @@ dao.setupDbForDev().then(res => {
   console.log(err);
 });
 
+// Data Processing
+// ProcessNPTA();
 
 app.use('/test', testRoutes);
 

@@ -34,7 +34,7 @@ const fillCityStatements = async (ct, cities) => {
 const timedCheck = async () => {
   let res = await repository.getLastUpdated();
   let nu = new Date(res.last_updated);
-  nu.setMinutes(nu.getMinutes() + 30);
+  nu.setMinutes(nu.getMinutes() + (60 * 24));
   let ct = new Date();
   if(nu <= ct) {
     console.log('Updating the database');
