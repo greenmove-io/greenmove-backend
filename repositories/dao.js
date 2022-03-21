@@ -57,6 +57,7 @@ export default class {
                   county TEXT,
                   country TEXT,
                   is_capital INTEGER,
+                  rating INTEGER,
                   last_updated INTEGER,
                   CONSTRAINT city_unique UNIQUE (city_id, name)
                 )`,

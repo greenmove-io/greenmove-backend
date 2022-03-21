@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-import repository from '../repositories/repository';
+import { closed } from '../repositories/repository';
 import { CityFetch } from './FetchData';
 
 const required_props = ['is_capital', 'latitude', 'longitude', 'population', 'overall_aqi'];
@@ -12,8 +12,10 @@ const fillCityStatements = async (ct, cities) => {
             for(let prop of required_props) {
               cityData[prop] ??= null;
             }
+
+            const cityRating = CalculateRating(cityData);
             res({
-                core: `UPDATE cities SET last_updated = ${ct} WHERE city_id = '${city.city_id}'`,
+                core: `UPDATE cities SET last_updated = ${ct}, rating = ${cityRating} WHERE city_id = '${city.city_id}'`,
                 data: `UPDATE city_data SET air_quality = ${cityData.overall_aqi} WHERE city_id = '${city.city_id}'`
             });
           } else {
@@ -32,7 +34,7 @@ const fillCityStatements = async (ct, cities) => {
 }
 
 const timedCheck = async () => {
-  let res = await repository.getLastUpdated();
+  let res = await closed.getLastUpdated();
   let nu = new Date(res.last_updated);
   nu.setMinutes(nu.getMinutes() + (60 * 24));
   let ct = new Date();
@@ -41,7 +43,7 @@ const timedCheck = async () => {
     const currentTime = Date.now();
     let coreStmts = [];
     let dataStmts = [];
-    let cities = await repository.getAllCities();
+    let cities = await closed.getAllCities();
     let stmts = await fillCityStatements(currentTime, cities);
 
     for(let stmt of stmts) {
@@ -49,10 +51,10 @@ const timedCheck = async () => {
       dataStmts.push(stmt.data);
     }
 
-    repository.changeCities(coreStmts).then(results => {
+    closed.changeCities(coreStmts).then(results => {
         console.log('Updated cities successfully');
 
-        repository.changeCities(dataStmts).then(results => {
+        closed.changeCities(dataStmts).then(results => {
             console.log('Updated city data successfully');
         }).catch(err => {
             console.error('BATCH FAILED ' + err);
@@ -65,7 +67,7 @@ const timedCheck = async () => {
 }
 
 const UpdateDatabase = async () => {
-  let isDatabaseFilled = await repository.checkCityData();
+  let isDatabaseFilled = await closed.checkCityData();
   if(!!isDatabaseFilled.isData) {
     timedCheck();
   } else {

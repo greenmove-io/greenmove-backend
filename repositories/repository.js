@@ -1,6 +1,62 @@
 import dao from './dao';
 
-export default class {
+export class open {
+  static async getCities() {
+    return dao.all(`
+      SELECT
+      	cities.name,
+        cities.county,
+        cities.country,
+        cities.is_capital,
+        city_data.lat,
+        city_data.lng,
+        city_data.pop,
+        city_data.air_quality
+      FROM cities
+      JOIN city_data ON city_data.city_id = cities.city_id
+    `);
+  }
+
+  static async getCity(id) {
+    return dao.get(`
+      SELECT
+      	cities.name,
+        cities.county,
+        cities.country,
+        cities.is_capital,
+        city_data.lat,
+        city_data.lng,
+        city_data.pop,
+        city_data.air_quality
+      FROM cities
+      JOIN city_data ON city_data.city_id = cities.city_id
+      WHERE cities.city_id = ?
+    `, [id]);
+  }
+
+  static async findCity(q) {
+    return dao.get(`
+      SELECT
+        cities.name,
+        cities.county,
+        cities.country,
+        cities.is_capital,
+        city_data.lat,
+        city_data.lng,
+        city_data.pop,
+        city_data.air_quality
+      FROM
+      	cities
+      JOIN city_data ON city_data.city_id = cities.city_id
+      WHERE (
+        	cities.name LIKE ? OR
+        	cities.county LIKE ?
+      )
+    `, [q]);
+  }
+}
+
+export class closed {
   static async changeCities(stmts) {
     return dao.runBatch(stmts);
   }

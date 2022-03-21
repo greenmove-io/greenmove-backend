@@ -2,7 +2,7 @@ import express from 'express';
 import dao from './repositories/dao';
 import { FillDatabase, UpdateDatabase, ProcessNPTA } from './utils';
 // import {  } from './controllers/auth.controller';
-import { testRoutes } from './routes';
+import { testRoutes, cityRoutes } from './routes';
 
 
 import cors from 'cors';
@@ -20,7 +20,7 @@ dao.setupDbForDev().then(res => {
     FillDatabase();
   } else {
     console.log('All city data is set');
-    UpdateDatabase();
+    // UpdateDatabase();
   }
 }).catch(err => {
   console.log(err);
@@ -30,6 +30,7 @@ dao.setupDbForDev().then(res => {
 // ProcessNPTA();
 
 app.use('/test', testRoutes);
+app.use('/city', cityRoutes);
 
 app.use((req, res, next) => {
     const error = new Error(`Cannot find ${req.originalUrl} on this server!`);

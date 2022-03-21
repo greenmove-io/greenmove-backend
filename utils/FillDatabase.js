@@ -1,5 +1,6 @@
 const crypto = require("crypto");
-import repository from '../repositories/repository';
+import { closed } from '../repositories/repository';
+import CalculateRating from './CalculateRating';
 import { CityFetch } from './FetchData';
 const CITY_DATA = require('../assets/json/uk-cities.json');
 
@@ -27,9 +28,10 @@ const fillCityStatements = async (ct) => {
               cityData[prop] ??= null;
             }
 
+            const cityRating = CalculateRating(cityData);
             let cityID = crypto.randomBytes(8).toString("hex");
             res({
-                core: `INSERT INTO cities (city_id, name, county, country, is_capital, last_updated) VALUES ('${cityID}', '${city.city}', '${city.county}', '${city.country}', ${+cityData.is_capital}, ${ct})`,
+                core: `INSERT INTO cities (city_id, name, county, country, is_capital, rating, last_updated) VALUES ('${cityID}', '${city.city}', '${city.county}', '${city.country}', ${+cityData.is_capital}, ${cityRating}, ${ct})`,
                 data: `INSERT INTO city_data (city_id, lat, lng, pop, air_quality) VALUES ('${cityID}', ${cityData.latitude}, ${cityData.longitude}, ${cityData.population}, ${cityData.overall_aqi})`
             });
           } else {
@@ -48,7 +50,7 @@ const fillCityStatements = async (ct) => {
 }
 
 const FillDatabase = async () => {
-  let isDatabaseFilled = await repository.checkCityData();
+  let isDatabaseFilled = await closed.checkCityData();
   console.log('Filling the database');
   const currentTime = Date.now();
   let coreStmts = [];
@@ -60,10 +62,10 @@ const FillDatabase = async () => {
     dataStmts.push(stmt.data);
   }
 
-  repository.changeCities(coreStmts).then(results => {
+  closed.changeCities(coreStmts).then(results => {
       console.log('Inserted cities successfully');
 
-      repository.changeCities(dataStmts).then(results => {
+      closed.changeCities(dataStmts).then(results => {
           console.log('Inserted city data successfully');
       }).catch(err => {
           console.error('BATCH FAILED ' + err);
