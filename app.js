@@ -1,9 +1,8 @@
 import express from 'express';
 import dao from './repositories/dao';
-import { FillDatabase, UpdateDatabase, ProcessNPTA } from './utils';
+import { FillDatabase, UpdateDatabase } from './utils';
 // import {  } from './controllers/auth.controller';
 import { testRoutes, cityRoutes } from './routes';
-
 
 import cors from 'cors';
 const app = express();
@@ -25,9 +24,6 @@ dao.setupDbForDev().then(res => {
 }).catch(err => {
   console.log(err);
 });
-
-// Data Processing
-// ProcessNPTA();
 
 app.use('/test', testRoutes);
 app.use('/city', cityRoutes);
