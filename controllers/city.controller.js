@@ -9,7 +9,7 @@ export const searchCities = async (req, res) => {
 
   const city = await open.findCity('%' + name + '%');
 
-  if(city.length < 1) {
+  if(city == undefined || city.length < 1) {
     return res.status(400).send({ status: 'fail', message: 'Could not find any cities from your search parameters.' });
   }
 
