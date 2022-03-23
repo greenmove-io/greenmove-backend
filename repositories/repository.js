@@ -4,6 +4,7 @@ export class open {
   static async getCities() {
     return dao.all(`
       SELECT
+        cities.city_id,
       	cities.name,
         cities.county,
         cities.country,
@@ -56,6 +57,18 @@ export class open {
         	cities.county LIKE ?
       )
     `, [q]);
+  }
+
+  static async getCounties() {
+    return dao.all(`
+      SELECT
+        cities.city_id,
+      	cities.name AS city_name,
+        cities.county,
+        cities.country,
+        cities.rating AS city_rating
+      FROM cities
+    `);
   }
 }
 

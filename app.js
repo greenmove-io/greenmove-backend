@@ -1,8 +1,7 @@
 import express from 'express';
 import dao from './repositories/dao';
 import { FillDatabase, UpdateDatabase } from './utils';
-// import {  } from './controllers/auth.controller';
-import { testRoutes, cityRoutes } from './routes';
+import { testRoutes, cityRoutes, countyRoutes } from './routes';
 
 import cors from 'cors';
 const app = express();
@@ -27,6 +26,7 @@ dao.setupDbForDev().then(res => {
 
 app.use('/test', testRoutes);
 app.use('/city', cityRoutes);
+app.use('/county', countyRoutes);
 
 app.use((req, res, next) => {
     const error = new Error(`Cannot find ${req.originalUrl} on this server!`);

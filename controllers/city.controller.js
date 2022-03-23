@@ -1,5 +1,22 @@
 import { open } from '../repositories/repository';
 
+export const getCities = async (req, res) => {
+  const cities = await open.getCities();
+
+  return res.status(200).send({ status: 'success', data: cities });
+}
+
+export const getCity = async (req, res) => {
+  const { id } = req.params;
+  const city = await open.getCity(id);
+
+  if(city == undefined) {
+    return res.status(400).send({ status: 'fail', message: 'Could not find any a city with that ID.' });
+  }
+
+  return res.status(200).send({ status: 'success', data: city });
+}
+
 export const searchCities = async (req, res) => {
   let name = req.query.name;
 
