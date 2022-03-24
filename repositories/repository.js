@@ -4,18 +4,11 @@ export class open {
   static async getCities() {
     return dao.all(`
       SELECT
-        cities.city_id,
       	cities.name,
         cities.county,
         cities.country,
-        cities.is_capital,
-        cities.rating,
-        city_data.lat,
-        city_data.lng,
-        city_data.pop,
-        city_data.air_quality
+        cities.rating
       FROM cities
-      JOIN city_data ON city_data.city_id = cities.city_id
     `);
   }
 
