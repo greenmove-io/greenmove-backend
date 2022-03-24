@@ -13,13 +13,8 @@ app.use(cors());
 
 // Database Setup
 dao.setupDbForDev().then(res => {
-  console.log(res.msg);
-  if(!!!res.data) {
-    FillDatabase();
-  } else {
-    console.log('All city data is set');
-    // UpdateDatabase();
-  }
+  console.log(res);
+  FillDatabase();
 }).catch(err => {
   console.log(err);
 });
