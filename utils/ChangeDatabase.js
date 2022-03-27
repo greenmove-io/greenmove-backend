@@ -56,7 +56,15 @@ const fillCityStatements = async (ct, isUpdate) => {
   })
 }
 
-const timedCheck = async () => {
+const fillDatabase = async () => {
+  const currentTime = Date.now();
+  let coreStmts = [];
+  let dataStmts = [];
+  let stmts;
+  stmts = await fillCityStatements(currentTime, false);
+}
+
+const updateCheck = async () => {
   let res = await closed.getLastUpdated();
   let nu = new Date(res.last_updated);
   nu.setMinutes(nu.getMinutes() + (60 * 24));
@@ -64,44 +72,24 @@ const timedCheck = async () => {
   if(nu <= ct) {
     console.log('Updating the database');
     const currentTime = Date.now();
-    let coreStmts = [];
-    let dataStmts = [];
+
     let cities = await closed.getAllCities();
-    let stmts = await fillCityStatements(currentTime, cities);
-
-    for(let stmt of stmts) {
-      coreStmts.push(stmt.core);
-      dataStmts.push(stmt.data);
-    }
-
-    closed.changeCities(coreStmts).then(results => {
-        console.log('Updated cities successfully');
-
-        closed.changeCities(dataStmts).then(results => {
-            console.log('Updated city data successfully');
-        }).catch(err => {
-            console.error('BATCH FAILED ' + err);
-        });
-    }).catch(err => {
-        console.error('BATCH FAILED ' + err);
-    });
+    return stmts = await fillCityStatements(currentTime, true);
   }
-  setTimeout(timedCheck, 60000);
+  setTimeout(updateCheck, 60000);
 }
 
-const FillDatabase = async () => {
+const ChangeDatabase = async () => {
   let isDatabaseFilled = await closed.checkCityData();
-  const currentTime = Date.now();
   let coreStmts = [];
   let dataStmts = [];
-  let stmts;
+
   if(!!!isDatabaseFilled) {
     console.log('Filling the database');
-    stmts = await fillCityStatements(currentTime, false);
+    fillDatabase();
   } else {
     console.log('All city data is set');
-    timedCheck();
-    stmts = await fillCityStatements(currentTime, true);
+    updateCheck();
   }
 
   for(let stmt of stmts) {
@@ -109,16 +97,16 @@ const FillDatabase = async () => {
     dataStmts.push(stmt.data);
   }
 
-  // closed.changeCities(coreStmts).then(results => {
-  //     console.log('Inserted cities successfully');
-  //
-  //     closed.changeCities(dataStmts).then(results => {
-  //         console.log('Inserted city data successfully');
-  //     }).catch(err => {
-  //         console.error('BATCH FAILED ' + err);
-  //     });
-  // }).catch(err => {
-  //     console.error('BATCH FAILED ' + err);
-  // });
+  closed.changeCities(coreStmts).then(results => {
+      console.log('Updated cities successfully');
+
+      closed.changeCities(dataStmts).then(results => {
+          console.log('Updated city data successfully');
+      }).catch(err => {
+          console.error('BATCH FAILED ' + err);
+      });
+  }).catch(err => {
+      console.error('BATCH FAILED ' + err);
+  });
 }
-export default FillDatabase;
+export default ChangeDatabase;

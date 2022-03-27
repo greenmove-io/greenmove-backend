@@ -1,6 +1,6 @@
 import express from 'express';
 import dao from './repositories/dao';
-import { FillDatabase, UpdateDatabase } from './utils';
+import { ChangeDatabase } from './utils';
 import { testRoutes, cityRoutes, countyRoutes } from './routes';
 
 import cors from 'cors';
@@ -14,7 +14,7 @@ app.use(cors());
 // Database Setup
 dao.setupDbForDev().then(res => {
   console.log(res);
-  FillDatabase();
+  // ChangeDatabase();
 }).catch(err => {
   console.log(err);
 });
