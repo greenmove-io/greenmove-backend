@@ -7,8 +7,11 @@ export class open {
       	cities.name,
         cities.county,
         cities.country,
-        cities.rating
+        cities.rating,
+        city_data.lat,
+        city_data.lng
       FROM cities
+      JOIN city_data ON city_data.city_id = cities.city_id
     `);
   }
 

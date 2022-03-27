@@ -64,17 +64,22 @@ export default class {
                 `CREATE TABLE IF NOT EXISTS city_data (
                   city_data_id INTEGER PRIMARY KEY AUTOINCREMENT,
                   city_id BLOB,
+                  city_area INTEGER,
                   lat INTEGER,
                   lng INTEGER,
                   pop INTEGER,
                   air_quality INTEGER,
+                  water_quality INTEGER,
+                  greenspace INTEGER,
+                  waste_recycling INTEGER,
+                  population_density INTEGER,
+                  number_cars INTEGER,
                   FOREIGN KEY(city_id) REFERENCES cities(city_id) ON DELETE CASCADE
                 )`,
             ];
 
             this.runBatch(stmts).then(async (results) => {
-              let dbData = await this.get(`SELECT EXISTS (SELECT name FROM cities) as isData`, []);
-              res({msg: `Database has setup successfully`, data: dbData.isData});
+              res(`Database has setup successfully`);
             }).catch(err => {
               rej(`BATCH TABLE CREATION FAILED: ${err}`);
             });
