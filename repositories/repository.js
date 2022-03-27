@@ -4,6 +4,7 @@ export class open {
   static async getCities() {
     return dao.all(`
       SELECT
+        cities.city_id,
       	cities.name,
         cities.county,
         cities.country,
@@ -36,6 +37,7 @@ export class open {
   static async findCity(q) {
     return dao.get(`
       SELECT
+        cities.city_id,
         cities.name,
         cities.county,
         cities.country,
