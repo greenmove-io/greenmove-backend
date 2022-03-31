@@ -1,8 +1,7 @@
 const axios = require('axios');
+import { isObjectEmpty } from './functions';
 
 const {
-  NINJA_API_URL,
-  NINJA_API_KEY,
   AQICN_API_URL,
   AQICN_API_KEY,
   WIKIDATA_API_URL
@@ -19,24 +18,6 @@ const airQuality = async (data) => {
       return res(results.data.data.aqi);
     }).catch(err => {
       return rej(`Error with fetching air quality: ${err.message}`);
-    });
-  });
-}
-
-const cityDetails = async (city) => {
-  return new Promise((res, rej) => {
-    axios.get(`${NINJA_API_URL}/city`, {
-      params: {
-        name: city,
-        country: 'GB'
-      },
-      headers: {
-        'X-Api-Key': NINJA_API_KEY
-      }
-    }).then(results => {
-      return res(results.data[0]);
-    }).catch(err => {
-      return rej(`Error with fetching city details: ${err.message}`);
     });
   });
 }
@@ -80,19 +61,32 @@ const wikidataClaims = async (WDID, property, rank) => {
 
 export const CityFetch = async (city) => {
   return new Promise(async (res, rej) => {
-    let WDID = await wikidataEntities(city).catch(err => rej(err));
-    WDID = WDID.entities[Object.keys(WDID.entities)[0]].id;
-    console.log(WDID);
-    let WDPOP = await wikidataClaims(WDID, 'P1082', 'preferred').catch(err => rej(err));
-    console.log(WDPOP.claims[WDID]);
-    let WDAREA = await wikidataClaims(WDID, 'P2046', 'normal').catch(err => rej(err));
-    console.log(WDAREA);
-    let cityData = await cityDetails(city).catch(err => rej(err));
-    let aqi = await airQuality(cityData).catch(err => rej(err));
+    console.log(city);
+    let wikiData = {};
+    let WDID = await wikidataEntities(city.name).catch(err => rej(err));
+    wikiData.wiki_id = WDID.entities[Object.keys(WDID.entities)[0]].id;
 
-    // let data = { ...cityData, aqi, ...WDID, ...WDPOP, ...WDAREA };
-    // console.log(data);
+    let WDPOP = await wikidataClaims(wikiData.wiki_id, 'P1082', 'preferred').catch(err => rej(err));
+    if(isObjectEmpty(WDPOP.claims)) {
+      WDPOP = await wikidataClaims(wikiData.wiki_id, 'P1082', 'normal').catch(err => rej(err));
+      if(isObjectEmpty(WDPOP.claims)) return rej(`No city population was found for ${city.name}`);
+    }
+    wikiData.population = +WDPOP.claims['P1082'][0]['mainsnak']['datavalue']['value']['amount'].replace(/\+/g, '');
+    let popDate = WDPOP.claims['P1082'][0]['qualifiers']['P585'][0]['datavalue']['value']['time'].replace(/\+/g, '');
+    wikiData.pop_date = new Date(popDate.slice(0, 4)).valueOf();
 
-    res({ ...cityData, aqi });
+    let WDAREA = await wikidataClaims(wikiData.wiki_id, 'P2046', 'normal').catch(err => rej(err));
+    if(isObjectEmpty(WDPOP.claims)) return rej(`No city area size was found for ${city.name}`);
+    wikiData.area = +WDAREA.claims['P2046'][0]['mainsnak']['datavalue']['value']['amount'].replace(/\+/g, '');
+
+    let WDCOORDINATES = await wikidataClaims(wikiData.wiki_id, 'P625', 'normal').catch(err => rej(err));
+    if(isObjectEmpty(WDPOP.claims)) return rej(`No city coordinate location was found for ${city.name}`);
+    let { latitude, longitude } = WDCOORDINATES.claims['P625'][0]['mainsnak']['datavalue']['value'];
+    wikiData.longitude = longitude;
+    wikiData.latitude = latitude;
+
+    let aqi = await airQuality(wikiData).catch(err => rej(err));
+
+    return res({ ...wikiData, aqi });
   });
 }

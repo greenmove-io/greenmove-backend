@@ -22,7 +22,6 @@ export class open {
       	cities.name,
         cities.county,
         cities.country,
-        cities.is_capital,
         cities.rating,
         city_data.lat,
         city_data.lng,
@@ -41,7 +40,6 @@ export class open {
         cities.name,
         cities.county,
         cities.country,
-        cities.is_capital,
         cities.rating,
         city_data.lat,
         city_data.lng,
@@ -84,6 +82,10 @@ export class closed {
   }
 
   static async getAllCities() {
-    return dao.all(`SELECT city_id, name FROM cities`);
+    return dao.all(`
+      SELECT *
+      FROM cities
+      JOIN city_data ON city_data.city_id = cities.city_id
+    `);
   }
 }
