@@ -22,38 +22,17 @@ const airQuality = async (data) => {
   });
 }
 
-const wikidataEntities = async (city) => {
+const wikidataRequest = async (q) => {
   return new Promise((res, rej) => {
-    axios.get(`${WIKIDATA_API_URL}/w/api.php`, {
+    axios.get(`${WIKIDATA_API_URL}/bigdata/namespace/wdq/sparql`, {
       params: {
-        action: 'wbgetentities',
-        sites: 'enwiki',
-        titles: city,
-        props: 'labels',
-        languages: 'en',
+        query: q,
         format: 'json'
       }
     }).then(results => {
       return res(results.data);
     }).catch(err => {
-      return rej(`Error with fetching city wikidata: ${err.message}`);
-    });
-  });
-}
-
-const wikidataClaims = async (WDID, property, rank) => {
-  return new Promise((res, rej) => {
-    axios.get(`${WIKIDATA_API_URL}/w/api.php`, {
-      params: {
-        action: 'wbgetclaims',
-        entity: WDID,
-        property: property,
-        rank: rank,
-        format: 'json'
-      }
-    }).then(results => {
-      return res(results.data);
-    }).catch(err => {
+      console.error(err);
       return rej(`Error with fetching city wikidata: ${err.message}`);
     });
   });
@@ -61,29 +40,36 @@ const wikidataClaims = async (WDID, property, rank) => {
 
 export const CityFetch = async (city) => {
   return new Promise(async (res, rej) => {
-    console.log(city);
+    const SPARQL = `
+      SELECT DISTINCT ?item ?name ?population ?area ?latitude ?longitude WHERE {
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en,en-gb". }
+        VALUES
+          ?type {wd:Q515} ?item wdt:P31 ?type .
+          ?item rdfs:label ?queryByTitle.
+          ?item wdt:P17 wd:Q145.
+          ?item p:P625 ?statement . # coordinate-location statement
+          ?statement psv:P625 ?coordinate_node .
+          OPTIONAL { ?coordinate_node wikibase:geoLatitude ?latitude. }
+          OPTIONAL { ?coordinate_node wikibase:geoLongitude ?longitude.}
+
+        OPTIONAL { ?item rdfs:label ?name. }
+        OPTIONAL { ?item wdt:P1082 ?population }
+        OPTIONAL { ?item wdt:P2046 ?area }
+        FILTER(REGEX(?queryByTitle, "${city}"))
+        FILTER (lang(?name) = "en")
+      } LIMIT 20
+    `;
+    let wikiRequest = await wikidataRequest(SPARQL).catch(err => rej(err));
     let wikiData = {};
-    let WDID = await wikidataEntities(city.name).catch(err => rej(err));
-    wikiData.wiki_id = WDID.entities[Object.keys(WDID.entities)[0]].id;
-
-    let WDPOP = await wikidataClaims(wikiData.wiki_id, 'P1082', 'preferred').catch(err => rej(err));
-    if(isObjectEmpty(WDPOP.claims)) {
-      WDPOP = await wikidataClaims(wikiData.wiki_id, 'P1082', 'normal').catch(err => rej(err));
-      if(isObjectEmpty(WDPOP.claims)) return rej(`No city population was found for ${city.name}`);
+    if(!wikiRequest.results.bindings < 1) {
+      for(const result of wikiRequest.results.bindings) {
+        if(result.name.value.includes(city)) {
+          for(const prop in wikiRequest.results.bindings[0]) {
+            wikiData[prop] = wikiRequest.results.bindings[0][prop].value;
+          }
+        }
+      }
     }
-    wikiData.population = +WDPOP.claims['P1082'][0]['mainsnak']['datavalue']['value']['amount'].replace(/\+/g, '');
-    let popDate = WDPOP.claims['P1082'][0]['qualifiers']['P585'][0]['datavalue']['value']['time'].replace(/\+/g, '');
-    wikiData.pop_date = new Date(popDate.slice(0, 4)).valueOf();
-
-    let WDAREA = await wikidataClaims(wikiData.wiki_id, 'P2046', 'normal').catch(err => rej(err));
-    if(isObjectEmpty(WDPOP.claims)) return rej(`No city area size was found for ${city.name}`);
-    wikiData.area = +WDAREA.claims['P2046'][0]['mainsnak']['datavalue']['value']['amount'].replace(/\+/g, '');
-
-    let WDCOORDINATES = await wikidataClaims(wikiData.wiki_id, 'P625', 'normal').catch(err => rej(err));
-    if(isObjectEmpty(WDPOP.claims)) return rej(`No city coordinate location was found for ${city.name}`);
-    let { latitude, longitude } = WDCOORDINATES.claims['P625'][0]['mainsnak']['datavalue']['value'];
-    wikiData.longitude = longitude;
-    wikiData.latitude = latitude;
 
     let aqi = await airQuality(wikiData).catch(err => rej(err));
 
