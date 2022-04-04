@@ -57,7 +57,7 @@ const fillCityStatements = async (ct) => {
 
 const updateCityStatements = (ct, cities) => {
   return Promise.all(
-    cities.map((city) => {
+    cities.map((city, i) => {
       return new Promise((res, rej) => {
         setTimeout(async () => {
           await CityFetch(city).then(async (cityData) => {
@@ -66,14 +66,14 @@ const updateCityStatements = (ct, cities) => {
                 cityData[prop] ??= null;
               }
 
-              console.log(cityData);
+              console.log(city.name);
               const cityRating = calculateRating(cityData);
               let aqi_label = aqi_levels.find(x => x[0] > cityData.aqi)[1];
 
               res({
-                  core: `UPDATE cities SET last_updated = ${ct}, rating = ${cityRating} WHERE city_id = '${cityData.city_id}'`,
-                  props: `UPDATE city_properties SET city_area = ${cityData.area}, lat = ${cityData.latitude}, lng = ${cityData.longitude}, pop = ${cityData.population} WHERE city_id = '${cityData.city_id}')`,
-                  quals: `UPDATE city_qualities SET air_quality = ${cityData.aqi}, air_quality_label = '${aqi_label}' WHERE city_id = '${cityData.city_id}')`
+                  core: `UPDATE cities SET last_updated = ${ct}, rating = ${cityRating} WHERE city_id = '${city.city_id}'`,
+                  props: `UPDATE city_properties SET city_area = ${cityData.area}, lat = ${cityData.latitude}, lng = ${cityData.longitude}, pop = ${cityData.population} WHERE city_id = '${city.city_id}')`,
+                  quals: `UPDATE city_qualities SET air_quality = ${cityData.aqi}, air_quality_label = '${aqi_label}' WHERE city_id = '${city.city_id}')`
               });
             } else {
               rej(city);
@@ -82,7 +82,7 @@ const updateCityStatements = (ct, cities) => {
             console.log('There was an error: ', err);
             res();
           });
-        }, 500 * CITY_DATA.length - 500 * i);
+        }, 500 * cities.length - 500 * i);
       });
     })
   ).then((stmts) => {
@@ -99,8 +99,8 @@ const fillDatabase = async () => {
 const updateCheck = async () => {
   let res = await closed.getLastUpdated();
   let nu = new Date(res.last_updated);
-  // nu.setMinutes(nu.getMinutes() + (60 * 24));
-  nu.setMinutes(nu.getMinutes() + 5);
+  nu.setMinutes(nu.getMinutes() + (60 * 24));
+  // nu.setMinutes(nu.getMinutes() + 1);
   let ct = new Date();
   setTimeout(ChangeDatabase, 1000);
 
@@ -108,7 +108,6 @@ const updateCheck = async () => {
     console.log('Updating the database');
     isUpdating = true;
     let cities = await closed.getAllCities();
-    cities = cities.slice(0, 4);
     return await updateCityStatements(Date.now(), cities);
   }
 }
@@ -125,7 +124,7 @@ const ChangeDatabase = async () => {
     stmts = await fillDatabase();
   } else {
     console.log('All city data is set');
-    // stmts = await updateCheck();
+    stmts = await updateCheck();
   }
 
   // console.log('statements: ', stmts);

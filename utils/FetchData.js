@@ -61,13 +61,24 @@ export const CityFetch = async (city) => {
     `;
     let wikiRequest = await wikidataRequest(SPARQL).catch(err => rej(err));
     let wikiData = {};
+    let i = 0;
+    let highestPop = 0;
+    let highestPopI = 0;
     if(!wikiRequest.results.bindings < 1) {
       for(const result of wikiRequest.results.bindings) {
         if(result.name.value.includes(city)) {
-          for(const prop in wikiRequest.results.bindings[0]) {
-            wikiData[prop] = wikiRequest.results.bindings[0][prop].value;
+          if(result.population) {
+            if(result.population.value > highestPop) {
+              highestPop = result.population.value;
+              highestPopI = i;
+            }
           }
         }
+        i++;
+      }
+
+      for(const prop in wikiRequest.results.bindings[highestPopI]) {
+        wikiData[prop] = wikiRequest.results.bindings[highestPopI][prop].value;
       }
     }
 

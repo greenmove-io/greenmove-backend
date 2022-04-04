@@ -9,10 +9,11 @@ export class open {
         cities.county,
         cities.country,
         cities.rating,
-        city_data.lat,
-        city_data.lng
+        city_properties.lat,
+        city_properties.lng
       FROM cities
-      JOIN city_data ON city_data.city_id = cities.city_id
+      JOIN city_properties ON city_properties.city_id = cities.city_id
+      JOIN city_qualities ON city_qualities.city_id = cities.city_id
     `);
   }
 
@@ -23,12 +24,13 @@ export class open {
         cities.county,
         cities.country,
         cities.rating,
-        city_data.lat,
-        city_data.lng,
-        city_data.pop,
-        city_data.air_quality
+        city_properties.lat,
+        city_properties.lng,
+        city_properties.pop,
+        city_qualities.air_quality
       FROM cities
-      JOIN city_data ON city_data.city_id = cities.city_id
+      JOIN city_properties ON city_properties.city_id = cities.city_id
+      JOIN city_qualities ON city_qualities.city_id = cities.city_id
       WHERE cities.city_id = ?
     `, [id]);
   }
@@ -41,13 +43,15 @@ export class open {
         cities.county,
         cities.country,
         cities.rating,
-        city_data.lat,
-        city_data.lng,
-        city_data.pop,
-        city_data.air_quality
+        city_properties.lat,
+        city_properties.lng,
+        city_properties.pop,
+        city_qualities.air_quality
+        city_qualities.air_quality_label
       FROM
       	cities
-      JOIN city_data ON city_data.city_id = cities.city_id
+      JOIN city_properties ON city_properties.city_id = cities.city_id
+      JOIN city_qualities ON city_qualities.city_id = cities.city_id
       WHERE (
         	cities.name LIKE ? OR
         	cities.county LIKE ?
@@ -85,7 +89,8 @@ export class closed {
     return dao.all(`
       SELECT *
       FROM cities
-      JOIN city_data ON city_data.city_id = cities.city_id
+      JOIN city_properties ON city_properties.city_id = cities.city_id
+      JOIN city_qualities ON city_qualities.city_id = cities.city_id
     `);
   }
 }
