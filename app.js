@@ -14,7 +14,7 @@ app.use(cors());
 // Database Setup
 dao.setupDbForDev().then(res => {
   console.log(res);
-  // ChangeDatabase();
+  ChangeDatabase();
 }).catch(err => {
   console.log(err);
 });

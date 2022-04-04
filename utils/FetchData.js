@@ -1,56 +1,89 @@
 const axios = require('axios');
+import { isObjectEmpty } from './functions';
 
 const {
-  OPENWEATHER_API_URL,
-  OPENWEATHER_API_KEY,
-  NINJA_API_URL,
-  NINJA_API_KEY
+  AQICN_API_URL,
+  AQICN_API_KEY,
+  WIKIDATA_API_URL
 } = require('../config');
 
-const airQuality = async (city) => {
+const airQuality = async (data) => {
   return new Promise((res, rej) => {
-    axios.get(`${NINJA_API_URL}/airquality`, {
+    if(data === undefined) rej('No data was returned');
+    axios.get(`${AQICN_API_URL}/feed/geo:${data['latitude']};${data['longitude']}/`, {
       params: {
-        city: city,
-        country: 'GB'
-      },
-      headers: {
-        'X-Api-Key': NINJA_API_KEY
+        token: AQICN_API_KEY
       }
     }).then(results => {
-      return res(results.data);
+      return res(results.data.data.aqi);
     }).catch(err => {
       return rej(`Error with fetching air quality: ${err.message}`);
     });
   });
 }
 
-const cityDetails = async (city) => {
+const wikidataRequest = async (q) => {
   return new Promise((res, rej) => {
-    axios.get(`${NINJA_API_URL}/city`, {
+    axios.get(`${WIKIDATA_API_URL}/bigdata/namespace/wdq/sparql`, {
       params: {
-        name: city,
-        country: 'GB'
-      },
-      headers: {
-        'X-Api-Key': NINJA_API_KEY
+        query: q,
+        format: 'json'
       }
     }).then(results => {
-      return res(results.data[0]);
+      return res(results.data);
     }).catch(err => {
-      return rej(`Error with fetching city details: ${err.message}`);
+      console.error(err);
+      return rej(`Error with fetching city wikidata: ${err.message}`);
     });
   });
 }
 
 export const CityFetch = async (city) => {
-  return Promise.all([
-    cityDetails(city),
-    airQuality(city)
-  ]).then( async ([details, aq]) => {
-    return {...details, ...aq};
-  }).catch(err => {
-    console.log(err);
-    return err;
-  })
+  return new Promise(async (res, rej) => {
+    const SPARQL = `
+      SELECT DISTINCT ?item ?name ?population ?area ?latitude ?longitude WHERE {
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en,en-gb". }
+        VALUES
+          ?type {wd:Q515} ?item wdt:P31 ?type .
+          ?item rdfs:label ?queryByTitle.
+          ?item wdt:P17 wd:Q145.
+          ?item p:P625 ?statement . # coordinate-location statement
+          ?statement psv:P625 ?coordinate_node .
+          OPTIONAL { ?coordinate_node wikibase:geoLatitude ?latitude. }
+          OPTIONAL { ?coordinate_node wikibase:geoLongitude ?longitude.}
+
+        OPTIONAL { ?item rdfs:label ?name. }
+        OPTIONAL { ?item wdt:P1082 ?population }
+        OPTIONAL { ?item wdt:P2046 ?area }
+        FILTER(REGEX(?queryByTitle, "${city}"))
+        FILTER (lang(?name) = "en")
+      } LIMIT 20
+    `;
+    let wikiRequest = await wikidataRequest(SPARQL).catch(err => rej(err));
+    let wikiData = {};
+    let i = 0;
+    let highestPop = 0;
+    let highestPopI = 0;
+    if(!wikiRequest.results.bindings < 1) {
+      for(const result of wikiRequest.results.bindings) {
+        if(result.name.value.includes(city)) {
+          if(result.population) {
+            if(result.population.value > highestPop) {
+              highestPop = result.population.value;
+              highestPopI = i;
+            }
+          }
+        }
+        i++;
+      }
+
+      for(const prop in wikiRequest.results.bindings[highestPopI]) {
+        wikiData[prop] = wikiRequest.results.bindings[highestPopI][prop].value;
+      }
+    }
+
+    let aqi = await airQuality(wikiData).catch(err => rej(err));
+
+    return res({ ...wikiData, aqi });
+  });
 }

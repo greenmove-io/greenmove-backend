@@ -56,24 +56,28 @@ export default class {
                   name TEXT,
                   county TEXT,
                   country TEXT,
-                  is_capital INTEGER,
                   rating INTEGER,
                   last_updated INTEGER,
                   CONSTRAINT city_unique UNIQUE (city_id, name)
                 )`,
-                `CREATE TABLE IF NOT EXISTS city_data (
-                  city_data_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                `CREATE TABLE IF NOT EXISTS city_properties (
                   city_id BLOB,
+                  wiki_item TEXT,
                   city_area INTEGER,
                   lat INTEGER,
                   lng INTEGER,
                   pop INTEGER,
+                  FOREIGN KEY(city_id) REFERENCES cities(city_id) ON DELETE CASCADE
+                )`,
+                `CREATE TABLE IF NOT EXISTS city_qualities (
+                  city_id BLOB,
                   air_quality INTEGER,
+                  air_quality_label TEXT,
                   water_quality INTEGER,
                   greenspace INTEGER,
                   waste_recycling INTEGER,
-                  population_density INTEGER,
                   number_cars INTEGER,
+                  population_density INTEGER,
                   FOREIGN KEY(city_id) REFERENCES cities(city_id) ON DELETE CASCADE
                 )`,
             ];
