@@ -27,7 +27,8 @@ export class open {
         city_properties.lat,
         city_properties.lng,
         city_properties.pop,
-        city_qualities.air_quality
+        city_qualities.air_quality,
+        city_qualities.air_quality_label
       FROM cities
       JOIN city_properties ON city_properties.city_id = cities.city_id
       JOIN city_qualities ON city_qualities.city_id = cities.city_id
@@ -46,7 +47,7 @@ export class open {
         city_properties.lat,
         city_properties.lng,
         city_properties.pop,
-        city_qualities.air_quality
+        city_qualities.air_quality,
         city_qualities.air_quality_label
       FROM
       	cities
