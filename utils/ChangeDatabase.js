@@ -112,6 +112,7 @@ const updateCheck = async () => {
   }
 }
 
+  let loopCounter = 0;
 const ChangeDatabase = async () => {
   let { isData } = await closed.checkCityData();
   let coreStmts = [];
@@ -123,7 +124,16 @@ const ChangeDatabase = async () => {
     console.log('Filling the database');
     stmts = await fillDatabase();
   } else {
-    console.log('All city data is set');
+    loopCounter++;
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+    process.stdout.write(`All city data is set`);
+    for(let j = 0; j < loopCounter; j++) {
+      process.stdout.write(`.`);
+    }
+    if(loopCounter == 3) {
+      loopCounter = 0;
+    }
     stmts = await updateCheck();
   }
 
