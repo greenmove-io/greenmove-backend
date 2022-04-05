@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const readline = require('readline');
 import { closed } from '../repositories/repository';
 import { calculateRating, calculateAQI, calculatePopulationDensity } from './CalculateData';
 import { CityFetch } from './FetchData';
@@ -27,8 +28,8 @@ const fillStatements = async (ct, cities) => {
                   cityData[prop] ??= null;
                 }
 
-                process.stdout.clearLine();
-                process.stdout.cursorTo(0);
+                readline.clearLine(process.stdout);
+                readline.cursorTo(process.stdout, 0);
                 process.stdout.write(`Progress: (${cities.length - i}/${cities.length}) ${city.name}`);
                 const cityRating = calculateRating(cityData);
                 let cityID = crypto.randomBytes(8).toString("hex");
@@ -83,8 +84,8 @@ const updateCheck = async () => {
   let ct = new Date();
 
   if(nu <= ct && !isUpdating) {
-    process.stdout.clearLine();
-    process.stdout.cursorTo(0);
+    readline.clearLine(process.stdout);
+    readline.cursorTo(process.stdout, 0);
     console.log('Updating the database');
     isUpdating = true;
     let cities = await closed.getAllCities();
@@ -106,8 +107,8 @@ const ChangeDatabase = async () => {
   } else {
     if(!isUpdating) {
       loopCounter++;
-      process.stdout.clearLine();
-      process.stdout.cursorTo(0);
+      readline.clearLine(process.stdout);
+      readline.cursorTo(process.stdout, 0);
       process.stdout.write(`All city data is set`);
       for(let j = 0; j < loopCounter; j++) {
         process.stdout.write(`.`);
@@ -116,8 +117,8 @@ const ChangeDatabase = async () => {
         loopCounter = 0;
       }
     } else {
-      process.stdout.clearLine();
-      process.stdout.cursorTo(0);
+      readline.clearLine(process.stdout);
+      readline.cursorTo(process.stdout, 0);
     }
     stmts = await updateCheck();
   }
