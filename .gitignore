@@ -6,7 +6,7 @@
 
 # testing
 **/coverage
-**/assets/hidden
+*/assets/hidden
 
 # production
 **/build
@@ -14,7 +14,7 @@
 # misc
 **.DS_Store
 **.pem
-**.sqlite
+*.sqlite
 **/public/
 
 # debug
