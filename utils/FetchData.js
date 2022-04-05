@@ -41,8 +41,8 @@ const wikidataRequest = async (q) => {
 export const CityFetch = async (city) => {
   return new Promise(async (res, rej) => {
     const SPARQL = `
-      SELECT DISTINCT ?item ?name ?population ?area ?latitude ?longitude WHERE {
-        SERVICE wikibase:label { bd:serviceParam wikibase:language "en,en-gb". }
+      SELECT DISTINCT ?item ?name ?population ?area ?unitLabel ?latitude ?longitude WHERE {
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
         VALUES
           ?type {wd:Q515} ?item wdt:P31 ?type .
           ?item rdfs:label ?queryByTitle.
@@ -51,13 +51,20 @@ export const CityFetch = async (city) => {
           ?statement psv:P625 ?coordinate_node .
           OPTIONAL { ?coordinate_node wikibase:geoLatitude ?latitude. }
           OPTIONAL { ?coordinate_node wikibase:geoLongitude ?longitude.}
+          OPTIONAL {
+            ?item p:P2046 ?areastatement .
+            ?areastatement psn:P2046 ?areanode .
+            ?areanode wikibase:quantityAmount ?area.
+            ?areanode wikibase:quantityUnit ?unit.
+          }
 
-        OPTIONAL { ?item rdfs:label ?name. }
-        OPTIONAL { ?item wdt:P1082 ?population }
-        OPTIONAL { ?item wdt:P2046 ?area }
-        FILTER(REGEX(?queryByTitle, "${city}"))
-        FILTER (lang(?name) = "en")
-      } LIMIT 20
+
+          OPTIONAL { ?item rdfs:label ?name. }
+          OPTIONAL { ?item wdt:P1082 ?population. }
+          FILTER(REGEX(?queryByTitle, "${city}"))
+          FILTER (lang(?name) = "en")
+
+      } LIMIT 10
     `;
     let wikiRequest = await wikidataRequest(SPARQL).catch(err => rej(err));
     let wikiData = {};

@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 import { closed } from '../repositories/repository';
-import { calculateRating, calculateAQI } from './CalculateData';
+import { calculateRating, calculateAQI, calculatePopulationDensity } from './CalculateData';
 import { CityFetch } from './FetchData';
 const CITY_DATA = require('../assets/json/uk-cities.json');
 let isUpdating = false;
@@ -16,9 +16,9 @@ let isUpdating = false;
 
 const required_props = ['item', 'population', 'area', 'latitude', 'longitude', 'aqi'];
 const aqi_levels = [[0, 'Good'], [50, 'Good'], [100, 'Moderate'], [150, 'Unhealthy for Sensitive Groups'], [200, 'Unhealthy'], [300, 'Very Unhealthy'], [500, 'Hazardous']];
-const fillCityStatements = async (ct) => {
+const fillStatements = async (ct, cities) => {
   return Promise.all(
-    CITY_DATA.map((city, i) => {
+    cities.map((city, i) => {
         return new Promise((res, rej) => {
           setTimeout(async () => {
             await CityFetch(city.name).then(async (cityData) => {
@@ -27,25 +27,40 @@ const fillCityStatements = async (ct) => {
                   cityData[prop] ??= null;
                 }
 
-                console.log(city);
-                // console.log(cityData);
+                process.stdout.clearLine();
+                process.stdout.cursorTo(0);
+                process.stdout.write(`Progress: (${cities.length - i}/${cities.length}) ${city.name}`);
                 const cityRating = calculateRating(cityData);
                 let cityID = crypto.randomBytes(8).toString("hex");
-                let aqi_label = aqi_levels.find(x => x[0] > cityData.aqi)[1];
+                cityData.aqi_label = aqi_levels.find(x => x[0] > cityData.aqi)[1];
+                if(cityData.population !== null && cityData.area !== null) {
+                  cityData.pop_density = calculatePopulationDensity(cityData.population, cityData.area);
+                } else {
+                  cityData.pop_density = null;
+                }
 
-                res({
-                    core: `INSERT INTO cities (city_id, name, county, country, rating, last_updated) VALUES ('${cityID}', '${city.name}', '${city.county}', '${city.country}', ${cityRating}, ${ct})`,
-                    props: `INSERT INTO city_properties (city_id, wiki_item, city_area, lat, lng, pop) VALUES ('${cityID}', '${cityData.item}', ${cityData.area}, ${cityData.latitude}, ${cityData.longitude}, ${cityData.population})`,
-                    quals: `INSERT INTO city_qualities (city_id, air_quality, air_quality_label) VALUES ('${cityID}', ${cityData.aqi}, '${aqi_label}')`
-                });
+                if(!isUpdating) {
+                  res({
+                      core: `INSERT INTO cities (city_id, name, county, country, rating, last_updated) VALUES ('${cityID}', '${city.name}', '${city.county}', '${city.country}', ${cityRating}, ${ct})`,
+                      props: `INSERT INTO city_properties (city_id, wiki_item, city_area, lat, lng, pop) VALUES ('${cityID}', '${cityData.item}', ${cityData.area}, ${cityData.latitude}, ${cityData.longitude}, ${cityData.population})`,
+                      quals: `INSERT INTO city_qualities (city_id, air_quality, air_quality_label, population_density) VALUES ('${cityID}', ${cityData.aqi}, '${cityData.aqi_label}', ${cityData.pop_density})`
+                  });
+                } else {
+                  res({
+                      core: `UPDATE cities SET last_updated = ${ct}, rating = ${cityRating} WHERE city_id = '${city.city_id}'`,
+                      props: `UPDATE city_properties SET city_area = ${cityData.area}, lat = ${cityData.latitude}, lng = ${cityData.longitude}, pop = ${cityData.population} WHERE city_id = '${city.city_id}'`,
+                      quals: `UPDATE city_qualities SET air_quality = ${cityData.aqi}, air_quality_label = '${cityData.aqi_label}', population_density = ${cityData.pop_density} WHERE city_id = '${city.city_id}'`
+                  });
+                }
               } else {
                 rej(city);
               }
             }).catch(err => {
+              console.log('The current city was: ', city);
               console.log('There was an error: ', err);
               res();
             });
-          }, 500 * CITY_DATA.length - 500 * i);
+          }, 400 * cities.length - 400 * i);
         });
     })
   ).then((stmts) => {
@@ -55,45 +70,9 @@ const fillCityStatements = async (ct) => {
   })
 }
 
-const updateCityStatements = (ct, cities) => {
-  return Promise.all(
-    cities.map((city, i) => {
-      return new Promise((res, rej) => {
-        setTimeout(async () => {
-          await CityFetch(city).then(async (cityData) => {
-            if(cityData !== undefined) {
-              for(let prop of required_props) {
-                cityData[prop] ??= null;
-              }
-
-              console.log(city.name);
-              const cityRating = calculateRating(cityData);
-              let aqi_label = aqi_levels.find(x => x[0] > cityData.aqi)[1];
-
-              res({
-                  core: `UPDATE cities SET last_updated = ${ct}, rating = ${cityRating} WHERE city_id = '${city.city_id}'`,
-                  props: `UPDATE city_properties SET city_area = ${cityData.area}, lat = ${cityData.latitude}, lng = ${cityData.longitude}, pop = ${cityData.population} WHERE city_id = '${city.city_id}')`,
-                  quals: `UPDATE city_qualities SET air_quality = ${cityData.aqi}, air_quality_label = '${aqi_label}' WHERE city_id = '${city.city_id}')`
-              });
-            } else {
-              rej(city);
-            }
-          }).catch(err => {
-            console.log('There was an error: ', err);
-            res();
-          });
-        }, 500 * cities.length - 500 * i);
-      });
-    })
-  ).then((stmts) => {
-    return(stmts);
-  }).catch(err => {
-    console.log('There was an error with a city: ', err);
-  })
-}
-
 const fillDatabase = async () => {
-  return await fillCityStatements(Date.now());
+  isUpdating = false;
+  return await fillStatements(Date.now(), CITY_DATA);
 }
 
 const updateCheck = async () => {
@@ -102,16 +81,18 @@ const updateCheck = async () => {
   nu.setMinutes(nu.getMinutes() + (60 * 24));
   // nu.setMinutes(nu.getMinutes() + 1);
   let ct = new Date();
-  setTimeout(ChangeDatabase, 1000);
 
   if(nu <= ct && !isUpdating) {
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
     console.log('Updating the database');
     isUpdating = true;
     let cities = await closed.getAllCities();
-    return await updateCityStatements(Date.now(), cities);
+    return await fillStatements(Date.now(), cities);
   }
 }
 
+  let loopCounter = 0;
 const ChangeDatabase = async () => {
   let { isData } = await closed.checkCityData();
   let coreStmts = [];
@@ -123,7 +104,21 @@ const ChangeDatabase = async () => {
     console.log('Filling the database');
     stmts = await fillDatabase();
   } else {
-    console.log('All city data is set');
+    if(!isUpdating) {
+      loopCounter++;
+      process.stdout.clearLine();
+      process.stdout.cursorTo(0);
+      process.stdout.write(`All city data is set`);
+      for(let j = 0; j < loopCounter; j++) {
+        process.stdout.write(`.`);
+      }
+      if(loopCounter == 3) {
+        loopCounter = 0;
+      }
+    } else {
+      process.stdout.clearLine();
+      process.stdout.cursorTo(0);
+    }
     stmts = await updateCheck();
   }
 
@@ -157,5 +152,7 @@ const ChangeDatabase = async () => {
         console.error('BATCH FAILED ' + err);
     });
   }
+
+  setTimeout(ChangeDatabase, 60000);
 }
 export default ChangeDatabase;
