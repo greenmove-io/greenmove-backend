@@ -6,6 +6,12 @@ export const getCities = async (req, res) => {
   return res.status(200).send({ status: 'success', data: cities });
 }
 
+export const getCityNames = async (req, res) => {
+  const cityNames = await open.getAllCityNames();
+
+  return res.status(200).send({ status: 'success', data: cityNames });
+}
+
 export const getCity = async (req, res) => {
   const { id } = req.params;
   const city = await open.getCity(id);

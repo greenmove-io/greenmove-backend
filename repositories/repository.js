@@ -17,6 +17,15 @@ export class open {
     `);
   }
 
+  static async getAllCityNames() {
+    return dao.all(`
+      SELECT
+        cities.city_id,
+      	cities.name
+      FROM cities
+    `);
+  }
+
   static async getCity(id) {
     return dao.get(`
       SELECT
