@@ -1,5 +1,6 @@
 import { open } from '../repositories/repository';
 import BoundaryData from '../utils/BoundaryData';
+import { numberWithCommas } from '../utils/functions';
 
 export const getCities = async (req, res) => {
   const cities = await open.getCities();
@@ -22,6 +23,8 @@ export const getCity = async (req, res) => {
     return res.status(400).send({ status: 'fail', message: 'Could not find any a city with that ID.' });
   }
 
+  city.pop = numberWithCommas(city.pop);
+
   if(!!+isGeoJSON) {
     let cityData = await BoundaryData(city.name);
     Object.assign(city, cityData);
@@ -43,6 +46,8 @@ export const searchCities = async (req, res) => {
   if(city == undefined || city.length < 1) {
     return res.status(400).send({ status: 'fail', message: 'Could not find any cities from your search parameters.' });
   }
+
+  city.pop = numberWithCommas(city.pop);
 
   if(!!+isGeoJSON) {
     let cityData = await BoundaryData(city.name);
