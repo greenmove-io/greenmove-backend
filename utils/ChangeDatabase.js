@@ -93,7 +93,7 @@ const updateCheck = async () => {
   }
 }
 
-  let loopCounter = 0;
+let loopCounter = 0;
 const ChangeDatabase = async () => {
   let { isData } = await closed.checkCityData();
   let coreStmts = [];

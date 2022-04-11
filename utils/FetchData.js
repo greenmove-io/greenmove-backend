@@ -1,5 +1,6 @@
 const axios = require('axios');
 import { isObjectEmpty } from './functions';
+import BoundaryData from './BoundaryData';
 
 const {
   AQICN_API_URL,
@@ -87,6 +88,11 @@ export const CityFetch = async (city) => {
       for(const prop in wikiRequest.results.bindings[highestPopI]) {
         wikiData[prop] = wikiRequest.results.bindings[highestPopI][prop].value;
       }
+    }
+
+    if(wikiData.area == undefined) {
+      let { area } = await BoundaryData(city);
+      wikiData.area = area;
     }
 
     let aqi = await airQuality(wikiData).catch(err => rej(err));

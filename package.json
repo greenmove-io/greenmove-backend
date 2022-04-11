@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/greenmove-io/greenmove-backend#readme",
   "dependencies": {
+    "@turf/area": "^6.5.0",
+    "@turf/helpers": "^6.5.0",
     "axios": "^0.26.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
