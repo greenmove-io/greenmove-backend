@@ -67,6 +67,7 @@ export default class {
                   lat INTEGER,
                   lng INTEGER,
                   pop INTEGER,
+                  postcode_districts TEXT,
                   FOREIGN KEY(city_id) REFERENCES cities(city_id) ON DELETE CASCADE
                 )`,
                 `CREATE TABLE IF NOT EXISTS city_qualities (

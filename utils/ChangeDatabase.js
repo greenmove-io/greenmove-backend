@@ -14,9 +14,11 @@ let isUpdating = false;
 //   }
 // ];
 
+const {
+  required_props,
+  aqi_levels
+} = require('../config');
 
-const required_props = ['item', 'population', 'area', 'latitude', 'longitude', 'aqi'];
-const aqi_levels = [[0, 'Good'], [50, 'Good'], [100, 'Moderate'], [150, 'Unhealthy for Sensitive Groups'], [200, 'Unhealthy'], [300, 'Very Unhealthy'], [500, 'Hazardous']];
 const fillStatements = async (ct, cities) => {
   return Promise.all(
     cities.map((city, i) => {

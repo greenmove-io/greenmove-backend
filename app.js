@@ -1,14 +1,18 @@
 import express from 'express';
 import dao from './repositories/dao';
 import { ChangeDatabase } from './utils';
-import { testRoutes, cityRoutes, countyRoutes } from './routes';
+import { cityRoutes, countyRoutes, pushRoutes } from './routes';
 
 import cors from 'cors';
 const app = express();
+const corsOptions = {
+  origin: ['http://localhost:3080', 'http://greenmove.io', 'http://greenmove.tk'],
+  optionsSuccessStatus: 200
+};
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors(corsOptions));
 
 
 // Database Setup
@@ -19,9 +23,10 @@ dao.setupDbForDev().then(res => {
   console.log(err);
 });
 
-app.use('/test', testRoutes);
 app.use('/city', cityRoutes);
 app.use('/county', countyRoutes);
+
+app.use('/push', pushRoutes);
 
 app.use((req, res, next) => {
     const error = new Error(`Cannot find ${req.originalUrl} on this server!`);
