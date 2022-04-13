@@ -1,10 +1,10 @@
 import { open } from '../repositories/repository';
 
-export const pushPostcodes = async (req, res) => {
-  const { postcodes } = req.body;
+export const vehicles = async (req, res) => {
+  const { vehicles } = req.body;
 
-  if(postcodes == undefined || !Array.isArray(postcodes)) {
-    return res.status(400).send({ status: 'fail', message: 'Please provide a list of valid postcodes' });
+  if(vehicles == undefined || !Array.isArray(vehicles)) {
+    return res.status(400).send({ status: 'fail', message: 'Please provide a list of valid vehicles' });
   }
 
   return res.status(200).send({ status: 'success', data: 'cheese bites' });

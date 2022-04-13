@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "nodemon ./index.js"
   },
+  "nodemonConfig": {
+      "ignore": ["assets/*"]
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/greenmove-io/greenmove-backend.git"

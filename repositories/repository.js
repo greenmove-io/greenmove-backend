@@ -1,7 +1,8 @@
 import dao from './dao';
 
 export class open {
-  static async getCities() {
+  static async getCities(isGeoJSON) {
+    console.log(isGeoJSON);
     return dao.all(`
       SELECT
         cities.city_id,
@@ -11,7 +12,7 @@ export class open {
         cities.rating,
         city_properties.lat,
         city_properties.lng,
-        city_properties.postcode_districts,
+        city_properties.postcode_districts
       FROM cities
       JOIN city_properties ON city_properties.city_id = cities.city_id
       JOIN city_qualities ON city_qualities.city_id = cities.city_id

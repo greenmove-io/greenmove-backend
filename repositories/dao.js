@@ -64,6 +64,7 @@ export default class {
                   city_id BLOB,
                   wiki_item TEXT,
                   city_area INTEGER,
+                  city_boundary BLOB,
                   lat INTEGER,
                   lng INTEGER,
                   pop INTEGER,

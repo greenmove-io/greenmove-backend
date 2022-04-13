@@ -3,7 +3,8 @@ import BoundaryData from '../utils/BoundaryData';
 import { numberWithCommas } from '../utils/functions';
 
 export const getCities = async (req, res) => {
-  const cities = await open.getCities();
+  let isGeoJSON = req.query.geojson_polygon;
+  const cities = await open.getCities(!!+isGeoJSON).catch(err => console.error(err));
 
   return res.status(200).send({ status: 'success', data: cities });
 }
@@ -28,8 +29,7 @@ export const getCity = async (req, res) => {
   city.pop = numberWithCommas(city.pop);
 
   if(!!+isGeoJSON) {
-    let cityData = await BoundaryData(city.name);
-    Object.assign(city, cityData);
+
   }
 
   return res.status(200).send({ status: 'success', data: city });
@@ -52,8 +52,7 @@ export const searchCities = async (req, res) => {
   city.pop = numberWithCommas(city.pop);
 
   if(!!+isGeoJSON) {
-    let cityData = await BoundaryData(city.name);
-    Object.assign(city, cityData);
+
   }
 
   return res.status(200).send({ status: 'success', data: city });

@@ -81,8 +81,9 @@ export const CityFetch = async (city) => {
       }
     }
 
+    let { area, geometry } = await BoundaryData(city).catch(err => rej(err));
+
     if(wikiData.area == undefined) {
-      let { area } = await BoundaryData(city);
       wikiData.area = area;
     }
 
@@ -90,6 +91,6 @@ export const CityFetch = async (city) => {
     let pc = await postcodeDistricts(wikiData).catch(err => rej(err));
     let postcodes = pc.map(x => x.outcode);
 
-    return res({ ...wikiData, aqi, postcodes: postcodes });
+    return res({ ...wikiData, aqi, postcodes: postcodes, geometry: geometry });
   });
 }

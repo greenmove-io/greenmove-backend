@@ -13,6 +13,7 @@ export const searchBoundaryData = async (city) => {
     }).then(results => {
       return res(results.data);
     }).catch(err => {
+      console.log(err);
       return rej(`Error with searching city boundaries: ${err.message}`);
     });
   });
@@ -47,26 +48,42 @@ const BoundaryData = async (city) => {
     if(data[i].category == "boundary") {
       if(data[i].type == "political") {
         selectedIndex = i;
+        break;
       } else if (data[i].type == "administrative") {
         selectedIndex = i;
+        break;
       }
     }
   }
 
-  if(data[selectedIndex]["geojson"]["type"] == "Polygon") {
-    let polygon = helpers.polygon(data[selectedIndex]["geojson"]["coordinates"]);
+  if(data[selectedIndex]["geojson"]["type"] == "Polygon" || data[selectedIndex]["geojson"]["type"] == "MultiPolygon") {
+    let polygon;
+    if(data[selectedIndex]["geojson"]["type"] == "MultiPolygon") {
+      polygon = helpers.multiPolygon(data[selectedIndex]["geojson"]["coordinates"])
+    } else {
+       polygon = helpers.polygon(data[selectedIndex]["geojson"]["coordinates"])
+    }
+
     let a = turf.default(polygon);
     return { geometry: data[selectedIndex]["geojson"], area: a };
   } else {
     let dn = await detailsBoundaryData("N", data[selectedIndex]["osm_id"], "place", 0);
     for(let i=0; i < dn["address"].length; i++) {
-      if(dn["address"][i]["place_type"] == "county") {
-        selectedIndex = i;
+      if(dn["address"][i]["class"] == "boundary") {
+        if(dn["address"][i]["type"] == "administrative") {
+          selectedIndex = i;
+          break;
+        }
       }
     }
 
     let dr = await detailsBoundaryData("R", dn["address"][selectedIndex]["osm_id"], "boundary", 1);
-    let polygon = helpers.polygon(dr["geometry"]["coordinates"]);
+    let polygon;
+    if(dr["geometry"]["type"] == "MultiPolygon") {
+      polygon = helpers.multiPolygon(dr["geometry"]["coordinates"])
+    } else {
+       polygon = helpers.polygon(dr["geometry"]["coordinates"])
+    }
     let a = turf.default(polygon);
     return { geometry: dr["geometry"], area: a };
   }

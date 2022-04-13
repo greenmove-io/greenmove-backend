@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const crypto = require("crypto");
 const readline = require('readline');
 import { closed } from '../repositories/repository';
@@ -45,14 +47,22 @@ const fillStatements = async (ct, cities) => {
                 }
 
                 cityData.postcodes = cityData.postcodes.join(',');
-                // console.log(cityData);
+                console.log(cityData);
 
                 if(!isUpdating) {
                   let cityID = crypto.randomBytes(8).toString("hex");
-                  res({
-                      core: `INSERT INTO cities (city_id, name, county, country, rating, last_updated) VALUES ('${cityID}', '${city.name}', '${city.county}', '${city.country}', ${cityRating}, ${ct})`,
-                      props: `INSERT INTO city_properties (city_id, wiki_item, city_area, lat, lng, pop, postcode_districts) VALUES ('${cityID}', '${cityData.item}', ${cityData.area}, ${cityData.latitude}, ${cityData.longitude}, ${cityData.population}, '${cityData.postcodes}')`,
-                      quals: `INSERT INTO city_qualities (city_id, air_quality, air_quality_label, population_density) VALUES ('${cityID}', ${cityData.aqi}, '${cityData.aqi_label}', ${cityData.pop_density})`
+                  let boundaryID = crypto.randomBytes(16).toString("hex");
+
+                  fs.writeFile(path.resolve(__dirname, '../assets/hidden/boundaries/city', `${boundaryID}.json`), JSON.stringify(cityData.geometry), 'utf8', (err) => {
+                    if(err) {
+                      rej(err);
+                    }
+
+                    res({
+                        core: `INSERT INTO cities (city_id, name, county, country, rating, last_updated) VALUES ('${cityID}', '${city.name}', '${city.county}', '${city.country}', ${cityRating}, ${ct})`,
+                        props: `INSERT INTO city_properties (city_id, wiki_item, city_area, city_boundary, lat, lng, pop, postcode_districts) VALUES ('${cityID}', '${cityData.item}', ${cityData.area}, '${boundaryID}', ${cityData.latitude}, ${cityData.longitude}, ${cityData.population}, '${cityData.postcodes}')`,
+                        quals: `INSERT INTO city_qualities (city_id, air_quality, air_quality_label, population_density) VALUES ('${cityID}', ${cityData.aqi}, '${cityData.aqi_label}', ${cityData.pop_density})`
+                    });
                   });
                 } else {
                   res({
@@ -69,7 +79,7 @@ const fillStatements = async (ct, cities) => {
               console.log('There was an error: ', err);
               res();
             });
-          }, 400 * cities.length - 400 * i);
+          }, 1000 * cities.length - 1000 * i);
         });
     })
   ).then((stmts) => {
@@ -87,8 +97,8 @@ const fillDatabase = async () => {
 const updateCheck = async () => {
   let res = await closed.getLastUpdated();
   let nu = new Date(res.last_updated);
-  nu.setMinutes(nu.getMinutes() + (60 * 24));
-  // nu.setMinutes(nu.getMinutes() + 1);
+  // nu.setMinutes(nu.getMinutes() + (60 * 24));
+  nu.setMinutes(nu.getMinutes() + 1);
   let ct = new Date();
 
   if(nu <= ct && !isUpdating) {
@@ -143,24 +153,24 @@ const ChangeDatabase = async () => {
       }
     }
 
-    closed.changeCities(coreStmts).then(results => {
-        console.log('Cities changed successfully');
-
-        closed.changeCities(propStmts).then(results => {
-            console.log('City properties changed successfully');
-
-            closed.changeCities(qualStmts).then(results => {
-                isUpdating = false;
-                console.log('City qualities changed successfully');
-            }).catch(err => {
-                console.error('BATCH FAILED ' + err);
-            });
-        }).catch(err => {
-            console.error('BATCH FAILED ' + err);
-        });
-    }).catch(err => {
-        console.error('BATCH FAILED ' + err);
-    });
+    // closed.changeCities(coreStmts).then(results => {
+    //     console.log('Cities changed successfully');
+    //
+    //     closed.changeCities(propStmts).then(results => {
+    //         console.log('City properties changed successfully');
+    //
+    //         closed.changeCities(qualStmts).then(results => {
+    //             isUpdating = false;
+    //             console.log('City qualities changed successfully');
+    //         }).catch(err => {
+    //             console.error('BATCH FAILED ' + err);
+    //         });
+    //     }).catch(err => {
+    //         console.error('BATCH FAILED ' + err);
+    //     });
+    // }).catch(err => {
+    //     console.error('BATCH FAILED ' + err);
+    // });
   }
 
   setTimeout(ChangeDatabase, 60000);
