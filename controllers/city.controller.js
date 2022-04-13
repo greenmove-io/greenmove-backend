@@ -10,8 +10,10 @@ export const getCities = async (req, res) => {
 
 export const getCityNames = async (req, res) => {
   const cityNames = await open.getAllCityNames();
+  let data = [];
+  cityNames.map(x => data.push(x.name));
 
-  return res.status(200).send({ status: 'success', data: cityNames });
+  return res.status(200).send({ status: 'success', data: data });
 }
 
 export const getCity = async (req, res) => {

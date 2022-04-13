@@ -20,7 +20,6 @@ export class open {
   static async getAllCityNames() {
     return dao.all(`
       SELECT
-        cities.city_id,
       	cities.name
       FROM cities
     `);

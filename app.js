@@ -2,6 +2,7 @@ import express from 'express';
 import dao from './repositories/dao';
 import { ChangeDatabase } from './utils';
 import { cityRoutes, countyRoutes, pushRoutes } from './routes';
+import { authMiddleware, authenticated } from './controllers/auth.controller';
 
 import cors from 'cors';
 const app = express();
@@ -13,6 +14,7 @@ const corsOptions = {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
+app.use(authMiddleware);
 
 
 // Database Setup
@@ -26,7 +28,7 @@ dao.setupDbForDev().then(res => {
 app.use('/city', cityRoutes);
 app.use('/county', countyRoutes);
 
-app.use('/push', pushRoutes);
+app.use('/push', authenticated, pushRoutes);
 
 app.use((req, res, next) => {
     const error = new Error(`Cannot find ${req.originalUrl} on this server!`);
