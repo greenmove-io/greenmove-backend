@@ -1,8 +1,7 @@
 import dao from './dao';
 
 export class open {
-  static async getCities(isGeoJSON) {
-    console.log(isGeoJSON);
+  static async getCities() {
     return dao.all(`
       SELECT
         cities.city_id,
@@ -94,6 +93,16 @@ export class closed {
 
   static async getLastUpdated() {
     return dao.get(`SELECT last_updated FROM cities`);
+  }
+
+  static async getCity(id) {
+    return dao.get(`
+      SELECT *
+      FROM cities
+      JOIN city_properties ON city_properties.city_id = cities.city_id
+      JOIN city_qualities ON city_qualities.city_id = cities.city_id
+      WHERE cities.city_id = ?
+    `, [id]);
   }
 
   static async getAllCities() {

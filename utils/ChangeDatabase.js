@@ -47,29 +47,35 @@ const fillStatements = async (ct, cities) => {
                 }
 
                 cityData.postcodes = cityData.postcodes.join(',');
-                console.log(cityData);
+                // console.log(cityData);
 
                 if(!isUpdating) {
                   let cityID = crypto.randomBytes(8).toString("hex");
                   let boundaryID = crypto.randomBytes(16).toString("hex");
 
-                  fs.writeFile(path.resolve(__dirname, '../assets/hidden/boundaries/city', `${boundaryID}.json`), JSON.stringify(cityData.geometry), 'utf8', (err) => {
-                    if(err) {
-                      rej(err);
-                    }
+                  try {
+                    await fs.promises.writeFile(path.resolve(__dirname, '../assets/hidden/boundaries/city', `${boundaryID}.json`), JSON.stringify(cityData.geometry), 'utf8');
 
                     res({
                         core: `INSERT INTO cities (city_id, name, county, country, rating, last_updated) VALUES ('${cityID}', '${city.name}', '${city.county}', '${city.country}', ${cityRating}, ${ct})`,
                         props: `INSERT INTO city_properties (city_id, wiki_item, city_area, city_boundary, lat, lng, pop, postcode_districts) VALUES ('${cityID}', '${cityData.item}', ${cityData.area}, '${boundaryID}', ${cityData.latitude}, ${cityData.longitude}, ${cityData.population}, '${cityData.postcodes}')`,
                         quals: `INSERT INTO city_qualities (city_id, air_quality, air_quality_label, population_density) VALUES ('${cityID}', ${cityData.aqi}, '${cityData.aqi_label}', ${cityData.pop_density})`
                     });
-                  });
+                  } catch(error) {
+                    rej(error);
+                  }
                 } else {
-                  res({
-                      core: `UPDATE cities SET last_updated = ${ct}, rating = ${cityRating} WHERE city_id = '${city.city_id}'`,
-                      props: `UPDATE city_properties SET city_area = ${cityData.area}, lat = ${cityData.latitude}, lng = ${cityData.longitude}, pop = ${cityData.population}, postcode_districts = '${cityData.postcodes}' WHERE city_id = '${city.city_id}'`,
-                      quals: `UPDATE city_qualities SET air_quality = ${cityData.aqi}, air_quality_label = '${cityData.aqi_label}', population_density = ${cityData.pop_density} WHERE city_id = '${city.city_id}'`
-                  });
+                  try {
+                    await fs.promises.writeFile(path.resolve(__dirname, '../assets/hidden/boundaries/city', `${city.city_boundary}.json`), JSON.stringify(cityData.geometry), 'utf8');
+
+                    res({
+                        core: `UPDATE cities SET last_updated = ${ct}, rating = ${cityRating} WHERE city_id = '${city.city_id}'`,
+                        props: `UPDATE city_properties SET city_area = ${cityData.area}, lat = ${cityData.latitude}, lng = ${cityData.longitude}, pop = ${cityData.population}, postcode_districts = '${cityData.postcodes}' WHERE city_id = '${city.city_id}'`,
+                        quals: `UPDATE city_qualities SET air_quality = ${cityData.aqi}, air_quality_label = '${cityData.aqi_label}', population_density = ${cityData.pop_density} WHERE city_id = '${city.city_id}'`
+                    });
+                  } catch(error) {
+                    rej(error);
+                  }
                 }
               } else {
                 rej(city);
@@ -79,7 +85,7 @@ const fillStatements = async (ct, cities) => {
               console.log('There was an error: ', err);
               res();
             });
-          }, 1000 * cities.length - 1000 * i);
+          }, 800 * cities.length - 800 * i);
         });
     })
   ).then((stmts) => {
@@ -97,8 +103,8 @@ const fillDatabase = async () => {
 const updateCheck = async () => {
   let res = await closed.getLastUpdated();
   let nu = new Date(res.last_updated);
-  // nu.setMinutes(nu.getMinutes() + (60 * 24));
-  nu.setMinutes(nu.getMinutes() + 1);
+  nu.setMinutes(nu.getMinutes() + (60 * 24));
+  // nu.setMinutes(nu.getMinutes() + 1);
   let ct = new Date();
 
   if(nu <= ct && !isUpdating) {
@@ -153,24 +159,24 @@ const ChangeDatabase = async () => {
       }
     }
 
-    // closed.changeCities(coreStmts).then(results => {
-    //     console.log('Cities changed successfully');
-    //
-    //     closed.changeCities(propStmts).then(results => {
-    //         console.log('City properties changed successfully');
-    //
-    //         closed.changeCities(qualStmts).then(results => {
-    //             isUpdating = false;
-    //             console.log('City qualities changed successfully');
-    //         }).catch(err => {
-    //             console.error('BATCH FAILED ' + err);
-    //         });
-    //     }).catch(err => {
-    //         console.error('BATCH FAILED ' + err);
-    //     });
-    // }).catch(err => {
-    //     console.error('BATCH FAILED ' + err);
-    // });
+    closed.changeCities(coreStmts).then(results => {
+        console.log('Cities changed successfully');
+
+        closed.changeCities(propStmts).then(results => {
+            console.log('City properties changed successfully');
+
+            closed.changeCities(qualStmts).then(results => {
+                isUpdating = false;
+                console.log('City qualities changed successfully');
+            }).catch(err => {
+                console.error('BATCH FAILED ' + err);
+            });
+        }).catch(err => {
+            console.error('BATCH FAILED ' + err);
+        });
+    }).catch(err => {
+        console.error('BATCH FAILED ' + err);
+    });
   }
 
   setTimeout(ChangeDatabase, 60000);

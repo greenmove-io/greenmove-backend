@@ -6,7 +6,7 @@
 
 # testing
 **/coverage
-*/assets/hidden
+**/assets/hidden
 /assets/json/uk-cities-large.json
 
 # production
