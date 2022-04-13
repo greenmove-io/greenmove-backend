@@ -10,7 +10,8 @@ export class open {
         cities.country,
         cities.rating,
         city_properties.lat,
-        city_properties.lng
+        city_properties.lng,
+        city_properties.postcode_districts,
       FROM cities
       JOIN city_properties ON city_properties.city_id = cities.city_id
       JOIN city_qualities ON city_qualities.city_id = cities.city_id

@@ -3,9 +3,11 @@ import { isObjectEmpty } from './functions';
 import BoundaryData from './BoundaryData';
 
 const {
+  citySPARQL,
+  WIKIDATA_API_URL,
   AQICN_API_URL,
   AQICN_API_KEY,
-  WIKIDATA_API_URL
+  POSTCODESIO_API_URL,
 } = require('../config');
 
 const airQuality = async (data) => {
@@ -33,41 +35,30 @@ const wikidataRequest = async (q) => {
     }).then(results => {
       return res(results.data);
     }).catch(err => {
-      console.error(err);
       return rej(`Error with fetching city wikidata: ${err.message}`);
+    });
+  });
+}
+
+const postcodeDistricts = async (data) => {
+  return new Promise((res, rej) => {
+    axios.get(`${POSTCODESIO_API_URL}/outcodes`, {
+      params: {
+        lon: data['longitude'],
+        lat: data['latitude']
+      }
+    }).then(results => {
+      return res(results.data.result);
+    }).catch(err => {
+      console.log(err);
+      return rej(`Error with fetching postcode data: ${err.message}`);
     });
   });
 }
 
 export const CityFetch = async (city) => {
   return new Promise(async (res, rej) => {
-    const SPARQL = `
-      SELECT DISTINCT ?item ?name ?population ?area ?unitLabel ?latitude ?longitude WHERE {
-        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-        VALUES
-          ?type {wd:Q515} ?item wdt:P31 ?type .
-          ?item rdfs:label ?queryByTitle.
-          ?item wdt:P17 wd:Q145.
-          ?item p:P625 ?statement . # coordinate-location statement
-          ?statement psv:P625 ?coordinate_node .
-          OPTIONAL { ?coordinate_node wikibase:geoLatitude ?latitude. }
-          OPTIONAL { ?coordinate_node wikibase:geoLongitude ?longitude.}
-          OPTIONAL {
-            ?item p:P2046 ?areastatement .
-            ?areastatement psn:P2046 ?areanode .
-            ?areanode wikibase:quantityAmount ?area.
-            ?areanode wikibase:quantityUnit ?unit.
-          }
-
-
-          OPTIONAL { ?item rdfs:label ?name. }
-          OPTIONAL { ?item wdt:P1082 ?population. }
-          FILTER(REGEX(?queryByTitle, "${city}"))
-          FILTER (lang(?name) = "en")
-
-      } LIMIT 10
-    `;
-    let wikiRequest = await wikidataRequest(SPARQL).catch(err => rej(err));
+    let wikiRequest = await wikidataRequest(citySPARQL(city)).catch(err => rej(err));
     let wikiData = {};
     let i = 0;
     let highestPop = 0;
@@ -96,7 +87,9 @@ export const CityFetch = async (city) => {
     }
 
     let aqi = await airQuality(wikiData).catch(err => rej(err));
+    let pc = await postcodeDistricts(wikiData).catch(err => rej(err));
+    let postcodes = pc.map(x => x.outcode);
 
-    return res({ ...wikiData, aqi });
+    return res({ ...wikiData, aqi, postcodes: postcodes });
   });
 }

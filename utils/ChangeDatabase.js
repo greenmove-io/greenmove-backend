@@ -33,25 +33,31 @@ const fillStatements = async (ct, cities) => {
                 readline.clearLine(process.stdout);
                 readline.cursorTo(process.stdout, 0);
                 process.stdout.write(`Progress: (${cities.length - i}/${cities.length}) ${city.name}`);
+
+
                 const cityRating = calculateRating(cityData);
-                let cityID = crypto.randomBytes(8).toString("hex");
                 cityData.aqi_label = aqi_levels.find(x => x[0] > cityData.aqi)[1];
+
                 if(cityData.population !== null && cityData.area !== null) {
                   cityData.pop_density = calculatePopulationDensity(cityData.population, cityData.area);
                 } else {
                   cityData.pop_density = null;
                 }
 
+                cityData.postcodes = cityData.postcodes.join(',');
+                // console.log(cityData);
+
                 if(!isUpdating) {
+                  let cityID = crypto.randomBytes(8).toString("hex");
                   res({
                       core: `INSERT INTO cities (city_id, name, county, country, rating, last_updated) VALUES ('${cityID}', '${city.name}', '${city.county}', '${city.country}', ${cityRating}, ${ct})`,
-                      props: `INSERT INTO city_properties (city_id, wiki_item, city_area, lat, lng, pop) VALUES ('${cityID}', '${cityData.item}', ${cityData.area}, ${cityData.latitude}, ${cityData.longitude}, ${cityData.population})`,
+                      props: `INSERT INTO city_properties (city_id, wiki_item, city_area, lat, lng, pop, postcode_districts) VALUES ('${cityID}', '${cityData.item}', ${cityData.area}, ${cityData.latitude}, ${cityData.longitude}, ${cityData.population}, '${cityData.postcodes}')`,
                       quals: `INSERT INTO city_qualities (city_id, air_quality, air_quality_label, population_density) VALUES ('${cityID}', ${cityData.aqi}, '${cityData.aqi_label}', ${cityData.pop_density})`
                   });
                 } else {
                   res({
                       core: `UPDATE cities SET last_updated = ${ct}, rating = ${cityRating} WHERE city_id = '${city.city_id}'`,
-                      props: `UPDATE city_properties SET city_area = ${cityData.area}, lat = ${cityData.latitude}, lng = ${cityData.longitude}, pop = ${cityData.population} WHERE city_id = '${city.city_id}'`,
+                      props: `UPDATE city_properties SET city_area = ${cityData.area}, lat = ${cityData.latitude}, lng = ${cityData.longitude}, pop = ${cityData.population}, postcode_districts = '${cityData.postcodes}' WHERE city_id = '${city.city_id}'`,
                       quals: `UPDATE city_qualities SET air_quality = ${cityData.aqi}, air_quality_label = '${cityData.aqi_label}', population_density = ${cityData.pop_density} WHERE city_id = '${city.city_id}'`
                   });
                 }
@@ -91,6 +97,7 @@ const updateCheck = async () => {
     console.log('Updating the database');
     isUpdating = true;
     let cities = await closed.getAllCities();
+    // cities = cities.splice(0, 4);
     return await fillStatements(Date.now(), cities);
   }
 }
