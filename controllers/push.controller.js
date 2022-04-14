@@ -1,11 +1,15 @@
-import { open } from '../repositories/repository';
+import { closed } from '../repositories/repository';
 
-export const vehicles = async (req, res) => {
-  const { vehicles } = req.body;
+export const vehicleData = async (req, res) => {
+  const { id, data } = req.query;
 
-  if(vehicles == undefined || !Array.isArray(vehicles)) {
-    return res.status(400).send({ status: 'fail', message: 'Please provide a list of valid vehicles' });
-  }
+  if(data == undefined || isNaN(data) || data <= 0) return res.status(400).send({ status: 'fail', message: 'Please provide valid vehicle data' });
 
-  return res.status(200).send({ status: 'success', data: 'cheese bites' });
+  const city = await closed.getCity(id).catch(err => console.error(err));
+
+  if(!city) return res.status(400).send({ status: 'fail', message: 'Could not find a city with that ID' });
+
+  await closed.insertVehicleCount(data, id).catch(err => console.error(err));
+
+  return res.status(200).send({ status: 'success', data: `Inserted vehicle quantity of place with id: ${id} with a value of: ${data} successfully` });
 }

@@ -1,8 +1,8 @@
-import { vehicles } from '../controllers/push.controller.js';
+import { vehicleData } from '../controllers/push.controller.js';
 
 import * as express from 'express';
 const router = express.Router();
 
-router.post('/vehicles', vehicles);
+router.post('/vehicleData', vehicleData);
 
 module.exports = router;

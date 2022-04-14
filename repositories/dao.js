@@ -78,7 +78,7 @@ export default class {
                   water_quality INTEGER,
                   greenspace INTEGER,
                   waste_recycling INTEGER,
-                  number_cars INTEGER,
+                  number_vehicles INTEGER,
                   population_density INTEGER,
                   FOREIGN KEY(city_id) REFERENCES cities(city_id) ON DELETE CASCADE
                 )`,

@@ -113,4 +113,8 @@ export class closed {
       JOIN city_qualities ON city_qualities.city_id = cities.city_id
     `);
   }
+
+  static async insertVehicleCount(quantity, id) {
+    return dao.run(`UPDATE city_qualities SET number_vehicles = ? WHERE city_id = ?`, [quantity, id]);
+  }
 }
