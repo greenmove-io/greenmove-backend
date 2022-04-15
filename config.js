@@ -9,11 +9,12 @@ exports.AQICN_API_KEY = process.env.AQICN_API_KEY;
 
 exports.WIKIDATA_API_URL = process.env.WIKIDATA_API_URL;
 exports.POSTCODESIO_API_URL = process.env.POSTCODESIO_API_URL;
+exports.OVERPASS_API_URL = process.env.OVERPASS_API_URL;
 
 exports.required_props = ['item', 'population', 'area', 'latitude', 'longitude', 'aqi'];
 exports.aqi_levels = [[0, 'Good'], [50, 'Good'], [100, 'Moderate'], [150, 'Unhealthy for Sensitive Groups'], [200, 'Unhealthy'], [300, 'Very Unhealthy'], [500, 'Hazardous']];
 
-exports.citySPARQL = (city) => `
+exports.CITY_SPARQL = (city) => `
   SELECT DISTINCT ?item ?name ?population ?area ?unitLabel ?latitude ?longitude WHERE {
     SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
     VALUES
@@ -38,4 +39,16 @@ exports.citySPARQL = (city) => `
       FILTER (lang(?name) = "en")
 
   } LIMIT 10
+`;
+
+exports.BUS_STOPS_OSM = (osmID) => `
+  [out:json][timeout:60];
+  rel(${osmID});
+  map_to_area;
+  nwr[highway=bus_stop](area) -> .all;
+  make counter num = 0 -> .count;
+  foreach.all {
+      .count convert counter num = t['num'] + 1 -> .count;
+  }
+  .count out;
 `;

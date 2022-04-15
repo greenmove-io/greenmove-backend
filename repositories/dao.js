@@ -63,8 +63,10 @@ export default class {
                 `CREATE TABLE IF NOT EXISTS city_properties (
                   city_id BLOB,
                   wiki_item TEXT,
+                  osm_id INTEGER,
                   city_area INTEGER,
                   city_boundary BLOB,
+                  area_inaccurate INTEGER,
                   lat INTEGER,
                   lng INTEGER,
                   pop INTEGER,
@@ -79,6 +81,7 @@ export default class {
                   greenspace INTEGER,
                   waste_recycling INTEGER,
                   number_vehicles INTEGER,
+                  number_bus_stops INTEGER,
                   population_density INTEGER,
                   FOREIGN KEY(city_id) REFERENCES cities(city_id) ON DELETE CASCADE
                 )`,

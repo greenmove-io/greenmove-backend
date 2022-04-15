@@ -47,18 +47,18 @@ const fillStatements = async (ct, cities) => {
                 }
 
                 cityData.postcodes = cityData.postcodes.join(',');
-                // console.log(cityData);
+                console.log(cityData);
 
                 if(!isUpdating) {
                   let cityID = crypto.randomBytes(8).toString("hex");
                   let boundaryID = crypto.randomBytes(16).toString("hex");
 
                   try {
-                    await fs.promises.writeFile(path.resolve(__dirname, '../assets/hidden/boundaries/city', `${boundaryID}.json`), JSON.stringify(cityData.geometry), 'utf8');
+                    // await fs.promises.writeFile(path.resolve(__dirname, '../assets/hidden/boundaries/city', `${boundaryID}.json`), JSON.stringify(cityData.geometry), 'utf8');
 
                     res({
                         core: `INSERT INTO cities (city_id, name, county, country, rating, last_updated) VALUES ('${cityID}', '${city.name}', '${city.county}', '${city.country}', ${cityRating}, ${ct})`,
-                        props: `INSERT INTO city_properties (city_id, wiki_item, city_area, city_boundary, lat, lng, pop, postcode_districts) VALUES ('${cityID}', '${cityData.item}', ${cityData.area}, '${boundaryID}', ${cityData.latitude}, ${cityData.longitude}, ${cityData.population}, '${cityData.postcodes}')`,
+                        props: `INSERT INTO city_properties (city_id, wiki_item, osm_id, city_area, city_boundary, area_inaccurate, lat, lng, pop, postcode_districts) VALUES ('${cityID}', '${cityData.item}', ${cityData.osm_id}, ${cityData.area}, '${boundaryID}', ${+ cityData.area_inaccurate}, ${cityData.latitude}, ${cityData.longitude}, ${cityData.population}, '${cityData.postcodes}')`,
                         quals: `INSERT INTO city_qualities (city_id, air_quality, air_quality_label, population_density) VALUES ('${cityID}', ${cityData.aqi}, '${cityData.aqi_label}', ${cityData.pop_density})`
                     });
                   } catch(error) {
@@ -66,7 +66,7 @@ const fillStatements = async (ct, cities) => {
                   }
                 } else {
                   try {
-                    await fs.promises.writeFile(path.resolve(__dirname, '../assets/hidden/boundaries/city', `${city.city_boundary}.json`), JSON.stringify(cityData.geometry), 'utf8');
+                    // await fs.promises.writeFile(path.resolve(__dirname, '../assets/hidden/boundaries/city', `${city.city_boundary}.json`), JSON.stringify(cityData.geometry), 'utf8');
 
                     res({
                         core: `UPDATE cities SET last_updated = ${ct}, rating = ${cityRating} WHERE city_id = '${city.city_id}'`,
@@ -103,8 +103,8 @@ const fillDatabase = async () => {
 const updateCheck = async () => {
   let res = await closed.getLastUpdated();
   let nu = new Date(res.last_updated);
-  nu.setMinutes(nu.getMinutes() + (60 * 24));
-  // nu.setMinutes(nu.getMinutes() + 1);
+  // nu.setMinutes(nu.getMinutes() + (60 * 24));
+  nu.setMinutes(nu.getMinutes() + 1);
   let ct = new Date();
 
   if(nu <= ct && !isUpdating) {
@@ -148,7 +148,7 @@ const ChangeDatabase = async () => {
     stmts = await updateCheck();
   }
 
-  // console.log('statements: ', stmts);
+  console.log('statements: ', stmts);
 
   if(stmts !== undefined) {
     for(let stmt of stmts) {
@@ -159,24 +159,24 @@ const ChangeDatabase = async () => {
       }
     }
 
-    closed.changeCities(coreStmts).then(results => {
-        console.log('Cities changed successfully');
-
-        closed.changeCities(propStmts).then(results => {
-            console.log('City properties changed successfully');
-
-            closed.changeCities(qualStmts).then(results => {
-                isUpdating = false;
-                console.log('City qualities changed successfully');
-            }).catch(err => {
-                console.error('BATCH FAILED ' + err);
-            });
-        }).catch(err => {
-            console.error('BATCH FAILED ' + err);
-        });
-    }).catch(err => {
-        console.error('BATCH FAILED ' + err);
-    });
+    // closed.changeCities(coreStmts).then(results => {
+    //     console.log('Cities changed successfully');
+    //
+    //     closed.changeCities(propStmts).then(results => {
+    //         console.log('City properties changed successfully');
+    //
+    //         closed.changeCities(qualStmts).then(results => {
+    //             isUpdating = false;
+    //             console.log('City qualities changed successfully');
+    //         }).catch(err => {
+    //             console.error('BATCH FAILED ' + err);
+    //         });
+    //     }).catch(err => {
+    //         console.error('BATCH FAILED ' + err);
+    //     });
+    // }).catch(err => {
+    //     console.error('BATCH FAILED ' + err);
+    // });
   }
 
   setTimeout(ChangeDatabase, 60000);

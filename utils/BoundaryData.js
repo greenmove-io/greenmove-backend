@@ -65,7 +65,7 @@ const BoundaryData = async (city) => {
     }
 
     let a = turf.default(polygon);
-    return { geometry: data[selectedIndex]["geojson"], area: a };
+    return { osm_id: data[selectedIndex]["osm_id"], geometry: data[selectedIndex]["geojson"], area: a, area_inaccurate: false };
   } else {
     let dn = await detailsBoundaryData("N", data[selectedIndex]["osm_id"], "place", 0);
     for(let i=0; i < dn["address"].length; i++) {
@@ -85,7 +85,7 @@ const BoundaryData = async (city) => {
        polygon = helpers.polygon(dr["geometry"]["coordinates"])
     }
     let a = turf.default(polygon);
-    return { geometry: dr["geometry"], area: a };
+    return { osm_id: dr["osm_id"], geometry: dr["geometry"], area: a, area_inaccurate: true };
   }
 
   return null;

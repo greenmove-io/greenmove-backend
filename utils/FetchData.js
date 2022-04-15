@@ -3,11 +3,13 @@ import { isObjectEmpty } from './functions';
 import BoundaryData from './BoundaryData';
 
 const {
-  citySPARQL,
+  CITY_SPARQL,
+  BUS_STOPS_OSM,
   WIKIDATA_API_URL,
   AQICN_API_URL,
   AQICN_API_KEY,
   POSTCODESIO_API_URL,
+  OVERPASS_API_URL
 } = require('../config');
 
 const airQuality = async (data) => {
@@ -56,9 +58,24 @@ const postcodeDistricts = async (data) => {
   });
 }
 
+const overpassAPI = async (data) => {
+  return new Promise((res, rej) => {
+    axios.get(`${OVERPASS_API_URL}/api/interpreter`, {
+      params: {
+        data: data
+      }
+    }).then(results => {
+      return res(results.data);
+    }).catch(err => {
+      console.log(err);
+      return rej(`Error with fetching postcode data: ${err.message}`);
+    });
+  });
+}
+
 export const CityFetch = async (city) => {
   return new Promise(async (res, rej) => {
-    let wikiRequest = await wikidataRequest(citySPARQL(city)).catch(err => rej(err));
+    let wikiRequest = await wikidataRequest(CITY_SPARQL(city)).catch(err => rej(err));
     let wikiData = {};
     let i = 0;
     let highestPop = 0;
@@ -81,7 +98,7 @@ export const CityFetch = async (city) => {
       }
     }
 
-    let { area, geometry } = await BoundaryData(city).catch(err => rej(err));
+    let { osm_id, area, geometry, area_inaccurate } = await BoundaryData(city).catch(err => rej(err));
 
     if(wikiData.area == undefined) {
       wikiData.area = area;
@@ -90,7 +107,9 @@ export const CityFetch = async (city) => {
     let aqi = await airQuality(wikiData).catch(err => rej(err));
     let pc = await postcodeDistricts(wikiData).catch(err => rej(err));
     let postcodes = pc.map(x => x.outcode);
+    let busStopsCount = await overpassAPI(BUS_STOPS_OSM(osm_id)).catch(err => rej(err));
+    console.log(busStopsCount);
 
-    return res({ ...wikiData, aqi, postcodes: postcodes, geometry: geometry });
+    return res({ ...wikiData, aqi, postcodes, osm_id, geometry, area_inaccurate });
   });
 }
