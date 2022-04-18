@@ -1,4 +1,4 @@
-import { closed } from '../repositories/repository';
+import { closed } from '../db/repository';
 
 export const vehicleData = async (req, res) => {
   const { id, data } = req.query;

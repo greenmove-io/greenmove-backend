@@ -98,18 +98,30 @@ export const CityFetch = async (city) => {
       }
     }
 
-    let { osm_id, area, geometry, area_inaccurate } = await BoundaryData(city).catch(err => rej(err));
+    // let { osm_id, area, geometry, area_inaccurate } = await BoundaryData(city).catch(err => rej(err));
+
+    if(wikiData.item) {
+      wikiData.item = wikiData.item.split('/')[4];
+    }
 
     if(wikiData.area == undefined) {
-      wikiData.area = area;
+      // wikiData.area = area;
+    } else {
+      wikiData.area = Number(wikiData.area);
+    }
+
+    if(wikiData.population !== undefined) wikiData.population = Number(wikiData.population);
+    if(wikiData.latitude !== undefined && wikiData.longitude !== undefined) {
+      wikiData.latitude = Number(wikiData.latitude);
+      wikiData.longitude = Number(wikiData.longitude);
     }
 
     let aqi = await airQuality(wikiData).catch(err => rej(err));
     let pc = await postcodeDistricts(wikiData).catch(err => rej(err));
     let postcodes = pc.map(x => x.outcode);
-    let busStopsCount = await overpassAPI(BUS_STOPS_OSM(osm_id)).catch(err => rej(err));
-    console.log(busStopsCount);
+    // let busStopsCount = await overpassAPI(BUS_STOPS_OSM(osm_id)).catch(err => rej(err));
 
-    return res({ ...wikiData, aqi, postcodes, osm_id, geometry, area_inaccurate });
+    return res({ ...wikiData, aqi, postcodes });
+    // return res({ ...wikiData, aqi, postcodes, osm_id, geometry, area_inaccurate });
   });
 }

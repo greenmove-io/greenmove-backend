@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-import { open, closed } from '../repositories/repository';
+import { open, closed } from '../db/repository';
 import BoundaryData from '../utils/BoundaryData';
 import { numberWithCommas } from '../utils/functions';
 

@@ -2,26 +2,17 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require("crypto");
 const readline = require('readline');
-import { closed } from '../repositories/repository';
+import { closed } from '../db/repository';
 import { calculateRating, calculateAQI, calculatePopulationDensity } from './CalculateData';
 import { CityFetch } from './FetchData';
 const CITY_DATA = require('../assets/json/uk-cities.json');
-let isUpdating = false;
-
-// const CITY_DATA = [
-//   {
-//     "name": "Aberdeen",
-//     "country": "Scotland",
-//     "county": "Aberdeen"
-//   }
-// ];
 
 const {
   required_props,
   aqi_levels
 } = require('../config');
 
-const fillStatements = async (ct, cities) => {
+const fillStatements = async (ct, cities, isUpdating) => {
   return Promise.all(
     cities.map((city, i) => {
         return new Promise((res, rej) => {
@@ -32,10 +23,9 @@ const fillStatements = async (ct, cities) => {
                   cityData[prop] ??= null;
                 }
 
-                readline.clearLine(process.stdout);
-                readline.cursorTo(process.stdout, 0);
-                process.stdout.write(`Progress: (${cities.length - i}/${cities.length}) ${city.name}`);
-
+                // readline.clearLine(process.stdout);
+                // readline.cursorTo(process.stdout, 0);
+                // process.stdout.write(`Progress: (${cities.length - i}/${cities.length}) ${city.name}`);
 
                 const cityRating = calculateRating(cityData);
                 cityData.aqi_label = aqi_levels.find(x => x[0] > cityData.aqi)[1];
@@ -46,7 +36,7 @@ const fillStatements = async (ct, cities) => {
                   cityData.pop_density = null;
                 }
 
-                cityData.postcodes = cityData.postcodes.join(',');
+                // cityData.postcodes = cityData.postcodes.join(',');
                 console.log(cityData);
 
                 if(!isUpdating) {
@@ -57,9 +47,9 @@ const fillStatements = async (ct, cities) => {
                     // await fs.promises.writeFile(path.resolve(__dirname, '../assets/hidden/boundaries/city', `${boundaryID}.json`), JSON.stringify(cityData.geometry), 'utf8');
 
                     res({
-                        core: `INSERT INTO cities (city_id, name, county, country, rating, last_updated) VALUES ('${cityID}', '${city.name}', '${city.county}', '${city.country}', ${cityRating}, ${ct})`,
-                        props: `INSERT INTO city_properties (city_id, wiki_item, osm_id, city_area, city_boundary, area_inaccurate, lat, lng, pop, postcode_districts) VALUES ('${cityID}', '${cityData.item}', ${cityData.osm_id}, ${cityData.area}, '${boundaryID}', ${+ cityData.area_inaccurate}, ${cityData.latitude}, ${cityData.longitude}, ${cityData.population}, '${cityData.postcodes}')`,
-                        quals: `INSERT INTO city_qualities (city_id, air_quality, air_quality_label, population_density) VALUES ('${cityID}', ${cityData.aqi}, '${cityData.aqi_label}', ${cityData.pop_density})`
+                        core: ["INSERT INTO places (place_id, place_type, name, county, country, rating, last_updated) VALUES ($1, $2, $3, $4, $5, $6, $7)", [cityID, 'CITY', city.name, city.county, city.country, cityRating, ct]],
+                        props: ["INSERT INTO places_properties (place_id, wiki_item, osm_id, place_area, place_boundary, area_inaccurate, latitude, longitude, population, postcode_districts) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", [cityID, cityData.item, cityData.osm_id, cityData.area, boundaryID, cityData.area_inaccurate, cityData.latitude, cityData.longitude, cityData.population, cityData.postcodes ]],
+                        quals: ["INSERT INTO places_qualities (place_id, air_quality, air_quality_label, population_density) VALUES ($1, $2, $3, $4)", [cityID, cityData.aqi, cityData.aqi_label, cityData.pop_density ]]
                     });
                   } catch(error) {
                     rej(error);
@@ -95,32 +85,8 @@ const fillStatements = async (ct, cities) => {
   })
 }
 
-const fillDatabase = async () => {
-  isUpdating = false;
-  return await fillStatements(Date.now(), CITY_DATA);
-}
-
-const updateCheck = async () => {
-  let res = await closed.getLastUpdated();
-  let nu = new Date(res.last_updated);
-  // nu.setMinutes(nu.getMinutes() + (60 * 24));
-  nu.setMinutes(nu.getMinutes() + 1);
-  let ct = new Date();
-
-  if(nu <= ct && !isUpdating) {
-    readline.clearLine(process.stdout);
-    readline.cursorTo(process.stdout, 0);
-    console.log('Updating the database');
-    isUpdating = true;
-    let cities = await closed.getAllCities();
-    // cities = cities.splice(0, 4);
-    return await fillStatements(Date.now(), cities);
-  }
-}
-
-let loopCounter = 0;
 const ChangeDatabase = async () => {
-  let { isData } = await closed.checkCityData();
+  let { isData } = await closed.checkPlacesData();
   let coreStmts = [];
   let propStmts = [];
   let qualStmts = [];
@@ -128,27 +94,14 @@ const ChangeDatabase = async () => {
 
   if(!!!isData) {
     console.log('Filling the database');
-    stmts = await fillDatabase();
+    stmts = await fillStatements(Date.now(), CITY_DATA, false);
   } else {
-    if(!isUpdating) {
-      loopCounter++;
-      readline.clearLine(process.stdout);
-      readline.cursorTo(process.stdout, 0);
-      process.stdout.write(`All city data is set`);
-      for(let j = 0; j < loopCounter; j++) {
-        process.stdout.write(`.`);
-      }
-      if(loopCounter == 3) {
-        loopCounter = 0;
-      }
-    } else {
-      readline.clearLine(process.stdout);
-      readline.cursorTo(process.stdout, 0);
-    }
-    stmts = await updateCheck();
+    console.log(`All city data is set`);
+    // let cities = await closed.getAllCities();
+    // stmts = await fillStatements(Date.now(), cities, true);
   }
 
-  console.log('statements: ', stmts);
+  // console.log('statements: ', stmts);
 
   if(stmts !== undefined) {
     for(let stmt of stmts) {
@@ -159,26 +112,23 @@ const ChangeDatabase = async () => {
       }
     }
 
-    // closed.changeCities(coreStmts).then(results => {
-    //     console.log('Cities changed successfully');
-    //
-    //     closed.changeCities(propStmts).then(results => {
-    //         console.log('City properties changed successfully');
-    //
-    //         closed.changeCities(qualStmts).then(results => {
-    //             isUpdating = false;
-    //             console.log('City qualities changed successfully');
-    //         }).catch(err => {
-    //             console.error('BATCH FAILED ' + err);
-    //         });
-    //     }).catch(err => {
-    //         console.error('BATCH FAILED ' + err);
-    //     });
-    // }).catch(err => {
-    //     console.error('BATCH FAILED ' + err);
-    // });
-  }
+    closed.changePlaces(coreStmts).then(results => {
+        console.log('Places changed successfully');
 
-  setTimeout(ChangeDatabase, 60000);
+        closed.changePlaces(propStmts).then(results => {
+            console.log('Places properties changed successfully');
+
+            closed.changePlaces(qualStmts).then(results => {
+                console.log('Places qualities changed successfully');
+            }).catch(err => {
+                console.error('BATCH FAILED ' + err);
+            });
+        }).catch(err => {
+            console.error('BATCH FAILED ' + err);
+        });
+    }).catch(err => {
+        console.error('BATCH FAILED ' + err);
+    });
+  }
 }
 export default ChangeDatabase;

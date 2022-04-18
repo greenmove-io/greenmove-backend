@@ -8,6 +8,8 @@
 **/coverage
 **/assets/hidden
 /assets/json/uk-cities-large.json
+**/database_old.js
+**/dao_old.js
 
 # production
 **/build

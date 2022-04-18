@@ -1,4 +1,4 @@
-import { open } from '../repositories/repository';
+import { open } from '../db/repository';
 
 export const getCounties = async (req, res) => {
   const counties = await open.getCounties();

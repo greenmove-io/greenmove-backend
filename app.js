@@ -1,5 +1,4 @@
 import express from 'express';
-import dao from './repositories/dao';
 import { ChangeDatabase } from './utils';
 import { cityRoutes, countyRoutes, pushRoutes } from './routes';
 import { authMiddleware, authenticated } from './controllers/auth.controller';
@@ -18,12 +17,7 @@ app.use(authMiddleware);
 
 
 // Database Setup
-dao.setupDbForDev().then(res => {
-  console.log(res);
-  ChangeDatabase();
-}).catch(err => {
-  console.log(err);
-});
+ChangeDatabase();
 
 app.use('/city', cityRoutes);
 app.use('/county', countyRoutes);
