@@ -10,6 +10,7 @@ exports.AQICN_API_KEY = process.env.AQICN_API_KEY;
 exports.WIKIDATA_API_URL = process.env.WIKIDATA_API_URL;
 exports.POSTCODESIO_API_URL = process.env.POSTCODESIO_API_URL;
 exports.OVERPASS_API_URL = process.env.OVERPASS_API_URL;
+exports.GITHUB_API_KEY = process.env.GITHUB_API_KEY;
 
 exports.required_props = ['item', 'osm_id', 'population', 'postcodes', 'area', 'latitude', 'longitude', 'aqi', 'area_inaccurate'];
 exports.aqi_levels = [[0, 'Good'], [50, 'Good'], [100, 'Moderate'], [150, 'Unhealthy for Sensitive Groups'], [200, 'Unhealthy'], [300, 'Very Unhealthy'], [500, 'Hazardous']];

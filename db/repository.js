@@ -88,7 +88,7 @@ export class closed {
   }
 
   static async checkPlacesData() {
-    return dao.get(`SELECT EXISTS (SELECT name FROM places) as isData`);
+    return dao.get(`SELECT EXISTS (SELECT name FROM places) as is_data`);
   }
 
   static async getLastUpdated() {

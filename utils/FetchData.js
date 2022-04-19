@@ -73,16 +73,16 @@ const overpassAPI = async (data) => {
   });
 }
 
-export const CityFetch = async (city) => {
+export const PlaceFetch = async ({ name, last_updated }) => {
   return new Promise(async (res, rej) => {
-    let wikiRequest = await wikidataRequest(CITY_SPARQL(city)).catch(err => rej(err));
+    let wikiRequest = await wikidataRequest(CITY_SPARQL(name)).catch(err => rej(err));
     let wikiData = {};
     let i = 0;
     let highestPop = 0;
     let highestPopI = 0;
     if(!wikiRequest.results.bindings < 1) {
       for(const result of wikiRequest.results.bindings) {
-        if(result.name.value.includes(city)) {
+        if(result.name.value.includes(name)) {
           if(result.population) {
             if(result.population.value > highestPop) {
               highestPop = result.population.value;
@@ -98,7 +98,7 @@ export const CityFetch = async (city) => {
       }
     }
 
-    // let { osm_id, area, geometry, area_inaccurate } = await BoundaryData(city).catch(err => rej(err));
+    // let { osm_id, area, geometry, area_inaccurate } = await BoundaryData(name).catch(err => rej(err));
 
     if(wikiData.item) {
       wikiData.item = wikiData.item.split('/')[4];
