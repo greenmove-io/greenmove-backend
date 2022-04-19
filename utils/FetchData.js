@@ -98,14 +98,35 @@ export const PlaceFetch = async ({ name, last_updated }) => {
       }
     }
 
-    // let { osm_id, area, geometry, area_inaccurate } = await BoundaryData(name).catch(err => rej(err));
+    let osm_id, area, geometry, area_inaccurate;
+
+    if(last_updated !== undefined) {
+      let nu = new Date(last_updated);
+      nu.setMinutes(nu.getMinutes() + (60 * 120));
+      let ct = new Date();
+
+      if(nu <= ct) {
+        const bd = await BoundaryData(name).catch(err => rej(err));
+        osm_id = bd['osm_id'];
+        area = bd['area'];
+        geometry = bd['geometry'];
+        area_inaccurate = bd['area_inaccurate'];
+      }
+    } else {
+        const bd = await BoundaryData(name).catch(err => rej(err));
+        osm_id = bd['osm_id'];
+        area = bd['area'];
+        geometry = bd['geometry'];
+        area_inaccurate = bd['area_inaccurate'];
+    }
+
 
     if(wikiData.item) {
       wikiData.item = wikiData.item.split('/')[4];
     }
 
-    if(wikiData.area == undefined) {
-      // wikiData.area = area;
+    if(wikiData.area == undefined && area !== undefined) {
+      wikiData.area = area;
     } else {
       wikiData.area = Number(wikiData.area);
     }
@@ -121,7 +142,6 @@ export const PlaceFetch = async ({ name, last_updated }) => {
     let postcodes = pc.map(x => x.outcode);
     // let busStopsCount = await overpassAPI(BUS_STOPS_OSM(osm_id)).catch(err => rej(err));
 
-    return res({ ...wikiData, aqi, postcodes });
-    // return res({ ...wikiData, aqi, postcodes, osm_id, geometry, area_inaccurate });
+    return res({ ...wikiData, aqi, postcodes, osm_id, geometry, area_inaccurate });
   });
 }

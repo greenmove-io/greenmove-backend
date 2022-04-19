@@ -2,9 +2,13 @@ const axios = require('axios');
 const helpers = require('@turf/helpers');
 const turf = require('@turf/area');
 
+const {
+  NOMINATIM_API_URL
+} = require('../config');
+
 export const searchBoundaryData = async (city) => {
   return new Promise((res, rej) => {
-    axios.get(`https://nominatim.openstreetmap.org/search.php`, {
+    axios.get(`${NOMINATIM_API_URL}/search.php`, {
       params: {
         q: `${city}+UK`,
         polygon_geojson: 1,
@@ -21,7 +25,7 @@ export const searchBoundaryData = async (city) => {
 
 export const detailsBoundaryData = async (osmtype, osmid, category, pg) => {
   return new Promise((res, rej) => {
-    axios.get(`https://nominatim.openstreetmap.org/details.php`, {
+    axios.get(`${NOMINATIM_API_URL}/details.php`, {
       params: {
         osmtype: osmtype,
         osmid: osmid,

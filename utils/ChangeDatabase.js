@@ -5,11 +5,13 @@ const readline = require('readline');
 import { closed } from '../db/repository';
 import { calculateRating, calculateAQI, calculatePopulationDensity } from './CalculateData';
 import { PlaceFetch } from './FetchData';
+import { pushFile } from './GitHubAPI';
 const CITY_DATA = require('../assets/json/uk-cities.json');
 
 const {
   required_props,
-  aqi_levels
+  aqi_levels,
+  GEOJSON_PRESET
 } = require('../config');
 
 const fillStatements = async (ct, places, isUpdating) => {
@@ -40,14 +42,18 @@ const fillStatements = async (ct, places, isUpdating) => {
 
                 if(!isUpdating) {
                   let placeID = crypto.randomBytes(8).toString("hex");
-                  let boundaryID = crypto.randomBytes(16).toString("hex");
 
                   try {
-                    // await fs.promises.writeFile(path.resolve(__dirname, '../assets/hidden/boundaries/city', `${boundaryID}.json`), JSON.stringify(placeData.geometry), 'utf8');
+                    if(placeData.geometry !== undefined) {
+                      const gj = GEOJSON_PRESET;
+                      gj.features = [];
+                      gj.features.push({ "type": "Feature", "properties": { "name": `${place.name}`, "id": `${placeID}`, "possibly_inaccurate": placeData.area_inaccurate }, "geometry": placeData.geometry });
+                      await pushFile(`places/boundaries/cities/${placeID}-${place.name.replace(/ /g,"_")}-${place.county.replace(/ /g,"_")}-${place.country.replace(/ /g,"_")}.json`, gj, `Adding boundary data for ${place.name}, ${place.county}, ${place.country}`);
+                    }
 
                     res({
                         core: ["INSERT INTO places (place_id, place_type, name, county, country, rating, last_updated) VALUES ($1, $2, $3, $4, $5, $6, $7)", [placeID, 'CITY', place.name, place.county, place.country, placeRating, ct]],
-                        props: ["INSERT INTO places_properties (place_id, wiki_item, osm_id, place_area, place_boundary, area_inaccurate, latitude, longitude, population, postcode_districts) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", [placeID, placeData.item, placeData.osm_id, placeData.area, boundaryID, placeData.area_inaccurate, placeData.latitude, placeData.longitude, placeData.population, placeData.postcodes ]],
+                        props: ["INSERT INTO places_properties (place_id, wiki_item, osm_id, place_area, area_inaccurate, latitude, longitude, population, postcode_districts) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)", [placeID, placeData.item, placeData.osm_id, placeData.area, placeData.area_inaccurate, placeData.latitude, placeData.longitude, placeData.population, placeData.postcodes ]],
                         quals: ["INSERT INTO places_qualities (place_id, air_quality, air_quality_label, population_density) VALUES ($1, $2, $3, $4)", [placeID, placeData.aqi, placeData.aqi_label, placeData.pop_density ]]
                     });
                   } catch(error) {

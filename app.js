@@ -3,6 +3,8 @@ import { ChangeDatabase } from './utils';
 import { cityRoutes, countyRoutes, pushRoutes } from './routes';
 import { authMiddleware, authenticated } from './controllers/auth.controller';
 
+const CITY_DATA = require('./assets/json/uk-cities.json');
+
 import cors from 'cors';
 const app = express();
 const corsOptions = {
@@ -14,7 +16,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
 app.use(authMiddleware);
-
 
 // Database Setup
 ChangeDatabase();
