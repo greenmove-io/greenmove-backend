@@ -1,2 +1,0 @@
-require('nnode');
-require('./app');
