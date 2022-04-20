@@ -1,6 +1,6 @@
 import express from 'express';
 import { ChangeDatabase } from './utils';
-import { cityRoutes, countyRoutes, pushRoutes } from './routes';
+import { cityRoutes, pushRoutes } from './routes';
 import { authMiddleware, authenticated } from './controllers/auth.controller';
 
 const CITY_DATA = require('./assets/json/uk-cities.json');
@@ -21,7 +21,6 @@ app.use(authMiddleware);
 ChangeDatabase();
 
 app.use('/city', cityRoutes);
-app.use('/county', countyRoutes);
 
 app.use('/push', authenticated, pushRoutes);
 
