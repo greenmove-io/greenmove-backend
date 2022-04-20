@@ -9,6 +9,15 @@ const {
     DATABASE_URL
 } = require('../config');
 
-const db = pgp(DATABASE_URL);
+let ssl = null;
+if (process.env.NODE_ENV === 'development') {
+   ssl = {rejectUnauthorized: false};
+}
+
+const db = pgp({
+  connectionString: DATABASE_URL,
+  max: 30,
+  ssl: { rejectUnauthorized: false }
+});
 
 module.exports = db;
