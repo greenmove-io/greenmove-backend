@@ -11,7 +11,6 @@ const CITY_DATA = require('../assets/json/uk-cities.json');
 const {
   aqi_levels,
   GEOJSON_PRESET,
-  // CITY_DATA
 } = require('../config');
 
 const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
@@ -109,8 +108,6 @@ const workWithPlaces = async (places) => {
 }
 
 const ChangeDatabase = async () => {
-  return;
-
   let data = await closed.checkPlacesData();
   const { is_data } = data[0];
   let places = CITY_DATA;
@@ -136,8 +133,6 @@ const ChangeDatabase = async () => {
       qualStmts.push(placesData[i].statements.quals);
     }
   }
-
-  // console.log(placesData);
 
   closed.changePlaces(coreStmts).then(results => {
       console.log('Places changed successfully');
