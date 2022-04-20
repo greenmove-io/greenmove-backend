@@ -6,9 +6,9 @@ const options = {
 const pgp = require('pg-promise')(options);
 
 const {
-    DB_URL
+    DATABASE_URL
 } = require('../config');
 
-const db = pgp(DB_URL);
+const db = pgp(DATABASE_URL);
 
 module.exports = db;
