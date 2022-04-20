@@ -1,10 +1,16 @@
 const axios = require('axios');
 import { isObjectEmpty } from './functions';
+import BoundaryData from './BoundaryData';
 
 const {
+  required_props,
+  CITY_SPARQL,
+  BUS_STOPS_OSM,
+  WIKIDATA_API_URL,
   AQICN_API_URL,
   AQICN_API_KEY,
-  WIKIDATA_API_URL
+  POSTCODESIO_API_URL,
+  OVERPASS_API_URL
 } = require('../config');
 
 const airQuality = async (data) => {
@@ -32,48 +38,52 @@ const wikidataRequest = async (q) => {
     }).then(results => {
       return res(results.data);
     }).catch(err => {
-      console.error(err);
       return rej(`Error with fetching city wikidata: ${err.message}`);
     });
   });
 }
 
-export const CityFetch = async (city) => {
+const postcodeDistricts = async (data) => {
+  return new Promise((res, rej) => {
+    axios.get(`${POSTCODESIO_API_URL}/outcodes`, {
+      params: {
+        lon: data['longitude'],
+        lat: data['latitude']
+      }
+    }).then(results => {
+      return res(results.data.result);
+    }).catch(err => {
+      console.log(err);
+      return rej(`Error with fetching postcode data: ${err.message}`);
+    });
+  });
+}
+
+const overpassAPI = async (data) => {
+  return new Promise((res, rej) => {
+    axios.get(`${OVERPASS_API_URL}/api/interpreter`, {
+      params: {
+        data: data
+      }
+    }).then(results => {
+      return res(results.data);
+    }).catch(err => {
+      console.log(err);
+      return rej(`Error with fetching postcode data: ${err.message}`);
+    });
+  });
+}
+
+export const PlaceFetch = async ({ name, last_updated }) => {
   return new Promise(async (res, rej) => {
-    const SPARQL = `
-      SELECT DISTINCT ?item ?name ?population ?area ?unitLabel ?latitude ?longitude WHERE {
-        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-        VALUES
-          ?type {wd:Q515} ?item wdt:P31 ?type .
-          ?item rdfs:label ?queryByTitle.
-          ?item wdt:P17 wd:Q145.
-          ?item p:P625 ?statement . # coordinate-location statement
-          ?statement psv:P625 ?coordinate_node .
-          OPTIONAL { ?coordinate_node wikibase:geoLatitude ?latitude. }
-          OPTIONAL { ?coordinate_node wikibase:geoLongitude ?longitude.}
-          OPTIONAL {
-            ?item p:P2046 ?areastatement .
-            ?areastatement psn:P2046 ?areanode .
-            ?areanode wikibase:quantityAmount ?area.
-            ?areanode wikibase:quantityUnit ?unit.
-          }
-
-
-          OPTIONAL { ?item rdfs:label ?name. }
-          OPTIONAL { ?item wdt:P1082 ?population. }
-          FILTER(REGEX(?queryByTitle, "${city}"))
-          FILTER (lang(?name) = "en")
-
-      } LIMIT 10
-    `;
-    let wikiRequest = await wikidataRequest(SPARQL).catch(err => rej(err));
+    let wikiRequest = await wikidataRequest(CITY_SPARQL(name)).catch(err => rej(err));
     let wikiData = {};
     let i = 0;
     let highestPop = 0;
     let highestPopI = 0;
     if(!wikiRequest.results.bindings < 1) {
       for(const result of wikiRequest.results.bindings) {
-        if(result.name.value.includes(city)) {
+        if(result.name.value.includes(name)) {
           if(result.population) {
             if(result.population.value > highestPop) {
               highestPop = result.population.value;
@@ -89,8 +99,58 @@ export const CityFetch = async (city) => {
       }
     }
 
-    let aqi = await airQuality(wikiData).catch(err => rej(err));
+    let osm_id, area, geometry, area_inaccurate;
 
-    return res({ ...wikiData, aqi });
+    if(last_updated !== undefined) {
+      let nu = new Date(last_updated);
+      nu.setMinutes(nu.getMinutes() + (60 * 120));
+      let ct = new Date();
+
+      if(nu <= ct) {
+        const bd = await BoundaryData(name).catch(err => rej(err));
+        osm_id = bd['osm_id'];
+        area = bd['area'];
+        geometry = bd['geometry'];
+        area_inaccurate = bd['area_inaccurate'];
+      }
+    } else {
+        const bd = await BoundaryData(name).catch(err => rej(err));
+        osm_id = bd['osm_id'];
+        area = bd['area'];
+        geometry = bd['geometry'];
+        area_inaccurate = bd['area_inaccurate'];
+    }
+
+
+    if(wikiData.item) {
+      wikiData.wiki_item = wikiData.item.split('/')[4];
+    }
+
+    if(wikiData.area == undefined && area !== undefined) {
+      wikiData.area = area;
+    } else {
+      wikiData.area = Number(wikiData.area);
+    }
+
+    if(wikiData.population !== undefined) wikiData.population = Number(wikiData.population);
+    if(wikiData.latitude !== undefined && wikiData.longitude !== undefined) {
+      wikiData.latitude = Number(wikiData.latitude);
+      wikiData.longitude = Number(wikiData.longitude);
+    }
+
+    let aqi = await airQuality(wikiData).catch(err => rej(err));
+    let pc = await postcodeDistricts(wikiData).catch(err => rej(err));
+    let postcodes = pc.map(x => x.outcode);
+    // let busStopsCount = await overpassAPI(BUS_STOPS_OSM(osm_id)).catch(err => rej(err));
+
+    let data = {...wikiData, air_quality: aqi, postcode_districts: postcodes, osm_id, geometry, area, area_inaccurate};
+    let returnData = {};
+    for(let prop of required_props) {
+      if(data[prop] !== undefined) {
+        returnData[prop] = data[prop];
+      }
+    }
+
+    return res(returnData);
   });
 }

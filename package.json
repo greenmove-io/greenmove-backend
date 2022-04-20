@@ -6,6 +6,11 @@
   "scripts": {
     "dev": "nodemon ./index.js"
   },
+  "nodemonConfig": {
+    "ignore": [
+      "assets/*"
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/greenmove-io/greenmove-backend.git"
@@ -17,12 +22,16 @@
   },
   "homepage": "https://github.com/greenmove-io/greenmove-backend#readme",
   "dependencies": {
+    "@turf/area": "^6.5.0",
+    "@turf/helpers": "^6.5.0",
     "axios": "^0.26.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
+    "github-api": "^3.4.0",
     "nnode": "^0.3.3",
     "nodemon": "^2.0.15",
+    "pg-promise": "^10.11.1",
     "sqlite3": "^5.0.2"
   }
 }
