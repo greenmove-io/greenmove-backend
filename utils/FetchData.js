@@ -3,6 +3,7 @@ import { isObjectEmpty } from './functions';
 import BoundaryData from './BoundaryData';
 
 const {
+  required_props,
   CITY_SPARQL,
   BUS_STOPS_OSM,
   WIKIDATA_API_URL,
@@ -122,7 +123,7 @@ export const PlaceFetch = async ({ name, last_updated }) => {
 
 
     if(wikiData.item) {
-      wikiData.item = wikiData.item.split('/')[4];
+      wikiData.wiki_item = wikiData.item.split('/')[4];
     }
 
     if(wikiData.area == undefined && area !== undefined) {
@@ -142,6 +143,14 @@ export const PlaceFetch = async ({ name, last_updated }) => {
     let postcodes = pc.map(x => x.outcode);
     // let busStopsCount = await overpassAPI(BUS_STOPS_OSM(osm_id)).catch(err => rej(err));
 
-    return res({ ...wikiData, aqi, postcodes, osm_id, geometry, area_inaccurate });
+    let data = {...wikiData, air_quality: aqi, postcode_districts: postcodes, osm_id, geometry, area, area_inaccurate};
+    let returnData = {};
+    for(let prop of required_props) {
+      if(data[prop] !== undefined) {
+        returnData[prop] = data[prop];
+      }
+    }
+
+    return res(returnData);
   });
 }

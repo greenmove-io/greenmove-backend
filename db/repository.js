@@ -4,21 +4,21 @@ export class open {
   static async getPlaces() {
     return dao.get(`
       SELECT
-        places.places_id,
+        places.place_id,
       	places.name,
         places.county,
         places.country,
         places.rating,
-        places_properties.lat,
-        places_properties.lng,
+        places_properties.latitude,
+        places_properties.longitude,
         places_properties.postcode_districts
       FROM places
-      JOIN places_properties ON places_properties.places_id = places.places_id
-      JOIN places_qualities ON places_qualities.places_id = places.places_id
+      INNER JOIN places_properties ON places_properties.place_id = places.place_id
+      INNER JOIN places_qualities ON places_qualities.place_id = places.place_id
     `);
   }
 
-  static async getAllPlacesNames() {
+  static async getAllPlaceNames() {
     return dao.get(`
       SELECT
       	places.name
@@ -26,59 +26,44 @@ export class open {
     `);
   }
 
-  static async getPlaces(id) {
+  static async getPlace(id) {
     return dao.get(`
       SELECT
       	places.name,
         places.county,
         places.country,
         places.rating,
-        places_properties.lat,
-        places_properties.lng,
-        places_properties.pop,
+        places_properties.latitude,
+        places_properties.longitude,
+        places_properties.population,
         places_qualities.air_quality,
         places_qualities.air_quality_label
       FROM places
-      JOIN places_properties ON places_properties.places_id = places.places_id
-      JOIN places_qualities ON places_qualities.places_id = places.places_id
-      WHERE places.places_id = $1
+      INNER JOIN places_properties ON places_properties.place_id = places.place_id
+      INNER JOIN places_qualities ON places_qualities.place_id = places.place_id
+      WHERE places.place_id = $1
     `, [id]);
   }
 
-  static async findPlaces(q) {
+  static async findPlace(q) {
     return dao.get(`
       SELECT
-        places.places_id,
+        places.place_id,
         places.name,
         places.county,
         places.country,
         places.rating,
-        places_properties.lat,
-        places_properties.lng,
-        places_properties.pop,
+        places_properties.latitude,
+        places_properties.longitude,
+        places_properties.population,
         places_qualities.air_quality,
         places_qualities.air_quality_label
       FROM
       	places
-      JOIN places_properties ON places_properties.places_id = places.places_id
-      JOIN places_qualities ON places_qualities.places_id = places.places_id
-      WHERE (
-        	places.name LIKE $1 OR
-        	places.county LIKE $1
-      )
+      INNER JOIN places_properties ON places_properties.place_id = places.place_id
+      INNER JOIN places_qualities ON places_qualities.place_id = places.place_id
+      WHERE places.name ILIKE $1
     `, [q]);
-  }
-
-  static async getCounties() {
-    return dao.get(`
-      SELECT
-        places.places_id,
-      	places.name AS places_name,
-        places.county,
-        places.country,
-        places.rating AS places_rating
-      FROM places
-    `);
   }
 }
 
@@ -99,9 +84,9 @@ export class closed {
     return dao.get(`
       SELECT *
       FROM places
-      JOIN places_properties ON places_properties.places_id = places.places_id
-      JOIN places_qualities ON places_qualities.places_id = places.places_id
-      WHERE places.places_id = $1
+      INNER JOIN places_properties ON places_properties.place_id = places.place_id
+      INNER JOIN places_qualities ON places_qualities.place_id = places.place_id
+      WHERE places.place_id = $1
     `, [id]);
   }
 
@@ -109,8 +94,8 @@ export class closed {
     return dao.get(`
       SELECT *
       FROM places
-      JOIN places_properties ON places_properties.places_id = places.places_id
-      JOIN places_qualities ON places_qualities.places_id = places.places_id
+      INNER JOIN places_properties ON places_properties.place_id = places.place_id
+      INNER JOIN places_qualities ON places_qualities.place_id = places.place_id
     `);
   }
 
