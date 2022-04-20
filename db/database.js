@@ -9,6 +9,6 @@ const {
     DB_SOURCE
 } = require('../config');
 
-const db = pgp(DB_SOURCE);
+const db = pgp(DB_URL);
 
 module.exports = db;
