@@ -10,26 +10,26 @@ CREATE TABLE places (
   county VARCHAR,
   country VARCHAR,
   rating NUMERIC(3,2),
-  last_updated INTEGER,
+  last_updated BIGINT,
   PRIMARY KEY(place_id)
 );
 
 CREATE TABLE places_properties (
-  place_id VARCHAR,
+  place_id VARCHAR(16),
   wiki_item VARCHAR,
   osm_id INTEGER,
-  place_area INTEGER,
+  place_area BIGINT,
   place_boundary VARCHAR(32),
   area_inaccurate BOOLEAN,
   latitude NUMERIC(16, 12),
   longitude NUMERIC(16, 12),
-  population INTEGER,
+  population BIGINT,
   postcode_districts VARCHAR [],
   CONSTRAINT fk_place FOREIGN KEY(place_id) REFERENCES places(place_id)
 );
 
 CREATE TABLE places_qualities (
-  place_id VARCHAR,
+  place_id VARCHAR(16),
   air_quality INTEGER,
   air_quality_label VARCHAR,
   water_quality INTEGER,

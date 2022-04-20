@@ -58,3 +58,46 @@ exports.BUS_STOPS_OSM = (osmID) => `
   }
   .count out;
 `;
+
+exports.CITY_DATA = [
+  {
+    "name": "Aberdeen",
+    "country": "Scotland",
+    "county": "Aberdeen"
+  },
+  {
+    "name": "Bangor",
+    "country": "Wales",
+    "county": "Gwynedd"
+  },
+  {
+    "name": "Bath",
+    "country": "England",
+    "county": "Somerset"
+  },
+  {
+    "name": "Belfast",
+    "country": "Northern Ireland",
+    "county": "Antrim"
+  },
+  {
+    "name": "Birmingham",
+    "country": "England",
+    "county": "West Midlands"
+  },
+  {
+    "name": "Bradford",
+    "country": "England",
+    "county": "West Yorkshire"
+  },
+  {
+    "name": "Bristol",
+    "country": "England",
+    "county": "Bristol"
+  },
+  {
+    "name": "Cambridge",
+    "country": "England",
+    "county": "Cambridgeshire"
+  },
+];

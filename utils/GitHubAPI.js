@@ -10,15 +10,21 @@ const gh = new GitHub({
 
 const repository = gh.getRepo('greenmove-io', 'greenmove-backend');
 
+export const updateHead = async (ref, commitSHA, force) => {
+  return new Promise(async (res, rej) => {
+    await repository.updateHead(ref, commitSHA, force).then(result => res(result.data)).catch(err => rej(err.data));
+  });
+}
+
 export const addCommit = async (parent, tree, message) => {
   return new Promise(async (res, rej) => {
-    await repository.commit(parent, tree, message).catch(result => res(result.data)).catch(err => rej(err.data));
+    await repository.commit(parent, tree, message).then(result => res(result.data)).catch(err => rej(err.data));
   });
 }
 
 export const getBranch = async (branch) => {
   return new Promise(async (res, rej) => {
-    await repository.getBranch(branch).then(result => res(result.data)).catch(err => rej(err.data));
+    await repository.getRef(branch).then(result => res(result.data)).catch(err => rej(err.data));
   });
 }
 

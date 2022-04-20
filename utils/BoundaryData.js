@@ -50,10 +50,7 @@ const BoundaryData = async (city) => {
   let selectedIndex = 0;
   for(let i=0; i < data.length; i++) {
     if(data[i].category == "boundary") {
-      if(data[i].type == "political") {
-        selectedIndex = i;
-        break;
-      } else if (data[i].type == "administrative") {
+      if(data[i].type == "political" || data[i].type == "administrative") {
         selectedIndex = i;
         break;
       }
@@ -74,7 +71,7 @@ const BoundaryData = async (city) => {
     let dn = await detailsBoundaryData("N", data[selectedIndex]["osm_id"], "place", 0);
     for(let i=0; i < dn["address"].length; i++) {
       if(dn["address"][i]["class"] == "boundary") {
-        if(dn["address"][i]["type"] == "administrative") {
+        if(dn["address"][i]["type"] == "administrative" || data[i].type == "county") {
           selectedIndex = i;
           break;
         }

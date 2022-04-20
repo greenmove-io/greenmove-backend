@@ -5,56 +5,14 @@ const readline = require('readline');
 import { closed } from '../db/repository';
 import { calculateRating, calculateAQI, calculatePopulationDensity } from './CalculateData';
 import { PlaceFetch } from './FetchData';
-import { createBlob, createTree, getBranch, addCommit } from './GitHubAPI';
-// const CITY_DATA = require('../assets/json/uk-cities.json');
-
-const CITY_DATA = [
-  {
-    "name": "Aberdeen",
-    "country": "Scotland",
-    "county": "Aberdeen"
-  },
-  {
-    "name": "Bangor",
-    "country": "Wales",
-    "county": "Gwynedd"
-  },
-  {
-    "name": "Bath",
-    "country": "England",
-    "county": "Somerset"
-  },
-  {
-    "name": "Belfast",
-    "country": "Northern Ireland",
-    "county": "Antrim"
-  },
-  {
-    "name": "Birmingham",
-    "country": "England",
-    "county": "West Midlands"
-  },
-  {
-    "name": "Bradford",
-    "country": "England",
-    "county": "West Yorkshire"
-  },
-  {
-    "name": "Bristol",
-    "country": "England",
-    "county": "Bristol"
-  },
-  {
-    "name": "Cambridge",
-    "country": "England",
-    "county": "Cambridgeshire"
-  }
-]
+import { createBlob, createTree, getBranch, addCommit, updateHead } from './GitHubAPI';
+const CITY_DATA = require('../assets/json/uk-cities.json');
 
 const {
   required_props,
   aqi_levels,
-  GEOJSON_PRESET
+  GEOJSON_PRESET,
+  // CITY_DATA
 } = require('../config');
 
 const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
@@ -80,11 +38,12 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
               place.population_density = null;
             }
 
-            const gj = GEOJSON_PRESET;
-            gj.features = [];
-            gj.features.push({ "type": "Feature", "properties": { "name": `${place.name}`, "id": `${place.place_id}`, "possibly_inaccurate": placeData.area_inaccurate }, "geometry": placeData.geometry });
-            // await pushFile(`places/boundaries/cities/${placeID}-${place.name.replace(/ /g,"_")}-${place.county.replace(/ /g,"_")}-${place.country.replace(/ /g,"_")}.json`, gj, `Adding boundary data for ${place.name}, ${place.county}, ${place.country}`);
-            place.blob = await createBlob(gj).catch(err => rej(err));
+            if(place.geometry !== undefined) {
+              let gj = GEOJSON_PRESET;
+              gj.features = [];
+              gj.features.push({ "type": "Feature", "properties": { "name": `${place.name}`, "id": `${place.place_id}`, "possibly_inaccurate": placeData.area_inaccurate }, "geometry": placeData.geometry });
+              place.blob = await createBlob(gj).catch(err => rej(err));
+            }
 
             // console.log(place);
 
@@ -92,7 +51,7 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
                 place.place_id = crypto.randomBytes(8).toString("hex");
 
                 res({
-                  statemnts: {
+                  statements: {
                     core: ["INSERT INTO places (place_id, place_type, name, county, country, rating, last_updated) VALUES ($1, $2, $3, $4, $5, $6, $7)", [place.place_id, 'CITY', place.name, place.county, place.country, place.rating, ct]],
                     props: ["INSERT INTO places_properties (place_id, wiki_item, osm_id, place_area, area_inaccurate, latitude, longitude, population, postcode_districts) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)", [place.place_id, place.item, place.osm_id, place.area, place.area_inaccurate, place.latitude, place.longitude, place.population, place.postcodes ]],
                     quals: ["INSERT INTO places_qualities (place_id, air_quality, air_quality_label, population_density) VALUES ($1, $2, $3, $4)", [place.place_id, place.aqi, place.aqi_label, place.population_density ]]
@@ -101,11 +60,12 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
                 });
             } else {
                 res({
-                  statemnts: {
+                  statements: {
                     core: ["UPDATE places SET last_updated = $1, rating = $2 WHERE place_id = $3", [ct, place.rating, place.place_id]],
                     props: ["UPDATE places_properties SET place_area = $1, latitude = $2, longitude = $3, population = $4, postcode_districts = $5 WHERE place_id = $6", [place.area, place.latitude, place.longitude, place.population, place.postcodes, place.place_id]],
                     quals: ["UPDATE places_qualities SET air_quality = $1, air_quality_label = $2, population_density = $3 WHERE place_id = $4", [place.aqi, place.aqi_label, place.population_density, place.place_id]]
-                  }
+                  },
+                  ...place
                 });
             }
           } else {
@@ -126,20 +86,16 @@ const setup = async (ct, places, isUpdating) => {
     return(data);
   }).catch(err => {
     console.log('There was an error with a place: ', err);
-  })
-
-  // const gj = GEOJSON_PRESET;
-  // gj.features = [];
-  // gj.features.push({ "type": "Feature", "properties": { "name": `${place.name}`, "id": `${placeID}`, "possibly_inaccurate": placeData.area_inaccurate }, "geometry": placeData.geometry });
-  // await pushFile(`places/boundaries/cities/${placeID}-${place.name.replace(/ /g,"_")}-${place.county.replace(/ /g,"_")}-${place.country.replace(/ /g,"_")}.json`, gj, `Adding boundary data for ${place.name}, ${place.county}, ${place.country}`);
+  });
 }
 
 const workWithPlaces = async (places) => {
+  console.log('Using place data for extra work');
   let treeData = [];
 
   places.map(place => {
     treeData.push({
-      path: `places/boundaries/cities/${place.place_id}-${place.name.replace(/ /g,"_")}-${place.county.replace(/ /g,"_")}-${place.country.replace(/ /g,"_")}.json`,
+      path: `places/boundaries/cities/${place.name.replace(/ /g,"_")}-${place.county.replace(/ /g,"_")}-${place.country.replace(/ /g,"_")}.json`,
       mode: "100644",
       type: "blob",
       sha: place.blob.sha
@@ -147,9 +103,9 @@ const workWithPlaces = async (places) => {
   });
 
   let tree = await createTree(treeData).catch(err => console.error(err));
-  let branch = await getBranch("file-storage").catch(err => console.error(err));
-  let commit = await addCommit(branch.commit.sha, tree.sha, "Adding boundary data").catch(err => console.error(err));
-  console.log(commit);
+  let branch = await getBranch("heads/file-storage").catch(err => console.error(err));
+  let commit = await addCommit(branch.object.sha, tree.sha, "Adding boundary data").catch(err => console.error(err));
+  let update = await updateHead('heads/file-storage', commit.sha, false).catch(err => console.error(err));
 }
 
 const ChangeDatabase = async () => {
@@ -169,17 +125,15 @@ const ChangeDatabase = async () => {
   let qualStmts = [];
 
   const placesData = await setup(Date.now(), places, is_data);
-  const workingWithPlaces = await workWithPlaces(placesData);
+  // const workingWithPlaces = await workWithPlaces(placesData);
 
-  // for(let i = 0; i < placesData.length; i++) {
-  //   if(stmt !== undefined) {
-  //     coreStmts.push(placesData[i].statement.core);
-  //     propStmts.push(placesData[i].statement.props);
-  //     qualStmts.push(placesData[i].statement.quals);
-  //   }
-  // }
-
-  // console.log('place data: ', placesData);
+  for(let i = 0; i < placesData.length; i++) {
+    if(placesData[i].statements !== undefined) {
+      coreStmts.push(placesData[i].statements.core);
+      propStmts.push(placesData[i].statements.props);
+      qualStmts.push(placesData[i].statements.quals);
+    }
+  }
 
   // closed.changePlaces(coreStmts).then(results => {
   //     console.log('Places changed successfully');
@@ -189,6 +143,7 @@ const ChangeDatabase = async () => {
   //
   //         closed.changePlaces(qualStmts).then(results => {
   //             console.log('Places qualities changed successfully');
+  //
   //         }).catch(err => {
   //             console.error('BATCH FAILED ' + err);
   //         });
