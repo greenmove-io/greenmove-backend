@@ -26,6 +26,7 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
             process.stdout.write(`Progress: (${placesLength - i}/${placesLength}) ${place.name}`);
 
             place = { ...place, ...placeData };
+            if(!isUpdating) place.place_id = crypto.randomBytes(8).toString("hex");
             place.rating = calculateRating(place);
             place.air_quality_label = aqi_levels.find(x => x[0] > place.air_quality)[1];
 
@@ -46,8 +47,6 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
             // console.log(place);
 
             if(!isUpdating) {
-                place.place_id = crypto.randomBytes(8).toString("hex");
-
                 res({
                   statements: [
                     ["INSERT INTO places (place_id, place_type, name, county, country, rating, last_updated) VALUES ($1, $2, $3, $4, $5, $6, $7)", [place.place_id, 'CITY', place.name, place.county, place.country, place.rating, ct]],
@@ -86,7 +85,7 @@ const setup = async (ct, places, isUpdating) => {
   });
 }
 
-const handeBoundaries = async (places) => {
+const handleBoundaries = async (places) => {
   if(places[0].blob == undefined) return;
   return new Promise(async (res, rej) => {
     let treeData = [];
@@ -135,16 +134,17 @@ const workWithPlaces = async (places) => {
   return new Promise(async (res, rej) => {
     console.log('');
     console.log('Using place data for extra work');
-    // handleBoundaries(places)
-    places = await handleBusStops(places).catch(err => console.erro(err));
+    await handleBoundaries(places).catch(err => console.error(err));
+    // places = await handleBusStops(places).catch(err => console.error(err));
 
     res(places);
   });
 }
 
 const ChangeDatabase = async () => {
+  return;
   let data = await closed.checkPlacesData();
-  const { is_data } = data[0];
+  const { is_data } = data;
   let places = CITY_DATA;
   let statements = [];
 
@@ -159,10 +159,10 @@ const ChangeDatabase = async () => {
   places = await workWithPlaces(places);
 
   places.map(place => place.statements.map(stmt => statements.push(stmt)));
-  // closed.changePlaces(statements).then(results => {
-  //     console.log('Places changed successfully');
-  // }).catch(err => {
-  //     console.error('BATCH FAILED ' + err);
-  // });
+  closed.changePlaces(statements).then(results => {
+      console.log('Places changed successfully');
+  }).catch(err => {
+      console.error('BATCH FAILED ' + err);
+  });
 }
 export default ChangeDatabase;

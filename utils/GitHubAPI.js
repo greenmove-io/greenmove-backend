@@ -41,6 +41,12 @@ export const createBlob = async (data) => {
   });
 }
 
+export const getContents = async (ref, path, raw) => {
+  return new Promise(async (res, rej) => {
+    await repository.getContents(ref, path, raw).then(result => res(result.data)).catch(err => rej(err));
+  });
+}
+
 export const PushBoundary = async (treeData) => {
   return new Promise(async (res, rej) => {
     let tree = await createTree(treeData).catch(err => rej(err));
@@ -49,5 +55,13 @@ export const PushBoundary = async (treeData) => {
     let update = await updateHead(GITHUB_BRANCH, commit.sha, false).catch(err => rej(err));
 
     res(update);
+  });
+}
+
+export const GetBoundary = async (path, raw) => {
+  return new Promise(async (res, rej) => {
+    let boundary = await getContents(GITHUB_BRANCH, path, raw).catch(err => rej(err));
+
+    res(boundary);
   });
 }
