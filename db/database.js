@@ -10,10 +10,13 @@ const {
     IS_LOCAL_DEV
 } = require('../config');
 
+let ssl = null;
+if(!IS_LOCAL_DEV) ssl = { rejectUnauthorized: false };
+
 const db = pgp({
   connectionString: DATABASE_URL,
   max: 30,
-  ssl: IS_LOCAL_DEV ? null : {rejectUnauthorized: false}
+  ssl: ssl
 });
 
 module.exports = db;
