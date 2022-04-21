@@ -8,7 +8,7 @@ const CITY_DATA = require('./assets/json/uk-cities.json');
 import cors from 'cors';
 const app = express();
 const corsOptions = {
-  origin: ['http://localhost:3080', 'http://greenmove.io', 'http://greenmove.tk'],
+  origin: ['https://greenmove.io', 'https://greenmove.tk'],
   optionsSuccessStatus: 200
 };
 

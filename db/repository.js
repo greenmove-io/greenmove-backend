@@ -80,7 +80,7 @@ export class closed {
     return dao.get(`SELECT last_updated FROM places`);
   }
 
-  static async getPlaces(id) {
+  static async getPlace(id) {
     return dao.get(`
       SELECT *
       FROM places
