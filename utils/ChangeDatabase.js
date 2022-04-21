@@ -134,7 +134,7 @@ const workWithPlaces = async (places) => {
   return new Promise(async (res, rej) => {
     console.log('');
     console.log('Using place data for extra work');
-    await handleBoundaries(places).catch(err => console.error(err));
+    // await handleBoundaries(places).catch(err => console.error(err));
     // places = await handleBusStops(places).catch(err => console.error(err));
 
     res(places);
@@ -142,6 +142,7 @@ const workWithPlaces = async (places) => {
 }
 
 const ChangeDatabase = async () => {
+  return;
   let data = await closed.checkPlacesData();
   const { is_data } = data;
   let places = CITY_DATA;
@@ -158,10 +159,10 @@ const ChangeDatabase = async () => {
   places = await workWithPlaces(places);
 
   places.map(place => place.statements.map(stmt => statements.push(stmt)));
-  closed.changePlaces(statements).then(results => {
-      console.log('Places changed successfully');
-  }).catch(err => {
-      console.error('BATCH FAILED ' + err);
-  });
+  // closed.changePlaces(statements).then(results => {
+  //     console.log('Places changed successfully');
+  // }).catch(err => {
+  //     console.error('BATCH FAILED ' + err);
+  // });
 }
 export default ChangeDatabase;

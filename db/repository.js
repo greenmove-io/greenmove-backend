@@ -4,6 +4,7 @@ export class open {
   static async getPlaces() {
     return dao.all(`
       SELECT
+        places.place_id,
       	places.name,
         places.county,
         places.country,
@@ -34,6 +35,7 @@ export class open {
   static async getPlace(id) {
     return dao.get(`
       SELECT
+        places.place_id,
       	places.name,
         places.county,
         places.country,
@@ -57,6 +59,7 @@ export class open {
   static async findPlace(q) {
     return dao.get(`
       SELECT
+        places.place_id,
       	places.name,
         places.county,
         places.country,

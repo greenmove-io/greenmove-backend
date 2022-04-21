@@ -3,7 +3,13 @@ import { numberWithCommas } from '../utils/functions';
 import { GetBoundary } from '../utils/GitHubAPI';
 
 export const getPlaces = async (req, res) => {
-  const places = await open.getPlaces().catch(err => console.error(err));
+  let places = await open.getPlaces().catch(err => console.error(err));
+
+  places = places.map(x => {
+    x.population = numberWithCommas(x.population);
+    x.area = Math.round(((x.area / 1000000) + Number.EPSILON) * 100) / 100;
+    return x;
+  });
 
   return res.status(200).send({ status: 'success', data: places });
 }
@@ -23,6 +29,7 @@ export const getPlace = async (req, res) => {
   if(place == undefined) return res.status(400).send({ status: 'fail', message: 'Could not find any place with that ID.' });
 
   place.population = numberWithCommas(place.population);
+  place.area = Math.round(((place.area / 1000000) + Number.EPSILON) * 100) / 100;
 
   return res.status(200).send({ status: 'success', data: place });
 }
@@ -49,6 +56,7 @@ export const searchPlaces = async (req, res) => {
   if(place == undefined) return res.status(400).send({ status: 'fail', message: 'Could not find any places from your search parameters.' });
 
   place.population = numberWithCommas(place.population);
+  place.area = Math.round(((place.area / 1000000) + Number.EPSILON) * 100) / 100;
 
   return res.status(200).send({ status: 'success', data: place });
 }

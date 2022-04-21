@@ -2,7 +2,7 @@ require('dotenv').config();
 
 exports.ACCESS_TOKEN = process.env.ACCESS_TOKEN;
 exports.DATABASE_URL = process.env.DATABASE_URL;
-exports.IS_LOCAL_DEV = process.env.IS_LOCAL_DEV;
+exports.IS_LOCAL_DEV = JSON.parse(process.env.IS_LOCAL_DEV);
 exports.BASE_URL = process.env.BASE_URL || 'http://localhost:3080';
 
 exports.AQICN_API_URL = process.env.AQICN_API_URL;
