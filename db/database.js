@@ -6,18 +6,14 @@ const options = {
 const pgp = require('pg-promise')(options);
 
 const {
-    DATABASE_URL
+    DATABASE_URL,
+    IS_LOCAL_DEV
 } = require('../config');
-
-let ssl = null;
-if (process.env.NODE_ENV === 'development') {
-   ssl = {rejectUnauthorized: false};
-}
 
 const db = pgp({
   connectionString: DATABASE_URL,
   max: 30,
-  ssl: { rejectUnauthorized: false }
+  ssl: IS_LOCAL_DEV ? null : {rejectUnauthorized: false}
 });
 
 module.exports = db;

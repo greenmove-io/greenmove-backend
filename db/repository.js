@@ -2,16 +2,21 @@ import dao from './dao';
 
 export class open {
   static async getPlaces() {
-    return dao.get(`
+    return dao.all(`
       SELECT
-        places.place_id,
       	places.name,
         places.county,
         places.country,
         places.rating,
+        places_properties.area,
+        places_properties.area_inaccurate,
         places_properties.latitude,
         places_properties.longitude,
-        places_properties.postcode_districts
+        places_properties.population,
+        places_properties.postcode_districts,
+        places_qualities.air_quality,
+        places_qualities.air_quality_label,
+        places_qualities.population_density
       FROM places
       INNER JOIN places_properties ON places_properties.place_id = places.place_id
       INNER JOIN places_qualities ON places_qualities.place_id = places.place_id
@@ -19,7 +24,7 @@ export class open {
   }
 
   static async getAllPlaceNames() {
-    return dao.get(`
+    return dao.all(`
       SELECT
       	places.name
       FROM places
@@ -33,11 +38,15 @@ export class open {
         places.county,
         places.country,
         places.rating,
+        places_properties.area,
+        places_properties.area_inaccurate,
         places_properties.latitude,
         places_properties.longitude,
         places_properties.population,
+        places_properties.postcode_districts,
         places_qualities.air_quality,
-        places_qualities.air_quality_label
+        places_qualities.air_quality_label,
+        places_qualities.population_density
       FROM places
       INNER JOIN places_properties ON places_properties.place_id = places.place_id
       INNER JOIN places_qualities ON places_qualities.place_id = places.place_id
@@ -48,18 +57,20 @@ export class open {
   static async findPlace(q) {
     return dao.get(`
       SELECT
-        places.place_id,
-        places.name,
+      	places.name,
         places.county,
         places.country,
         places.rating,
+        places_properties.area,
+        places_properties.area_inaccurate,
         places_properties.latitude,
         places_properties.longitude,
         places_properties.population,
+        places_properties.postcode_districts,
         places_qualities.air_quality,
-        places_qualities.air_quality_label
-      FROM
-      	places
+        places_qualities.air_quality_label,
+        places_qualities.population_density
+      FROM places
       INNER JOIN places_properties ON places_properties.place_id = places.place_id
       INNER JOIN places_qualities ON places_qualities.place_id = places.place_id
       WHERE places.name ILIKE $1
@@ -80,7 +91,7 @@ export class closed {
     return dao.get(`SELECT last_updated FROM places`);
   }
 
-  static async getPlaces(id) {
+  static async getPlace(id) {
     return dao.get(`
       SELECT *
       FROM places
@@ -91,7 +102,7 @@ export class closed {
   }
 
   static async getAllPlaces() {
-    return dao.get(`
+    return dao.all(`
       SELECT *
       FROM places
       INNER JOIN places_properties ON places_properties.place_id = places.place_id
@@ -100,6 +111,6 @@ export class closed {
   }
 
   static async insertVehicleCount(quantity, id) {
-    return dao.get(`UPDATE places_qualities SET number_vehicles = $1 WHERE places_id = $2`, [quantity, id]);
+    return dao.run(`UPDATE places_qualities SET number_vehicles = $1 WHERE places_id = $2`, [quantity, id]);
   }
 }

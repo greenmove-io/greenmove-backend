@@ -3,6 +3,18 @@ const db = require('./database');
 export default class {
   static get(stmt, params) {
     return new Promise((res, rej) => {
+      db.any(stmt, params).then(result => res(result[0])).catch(err => rej(err));
+    });
+  }
+
+  static all(stmt, params) {
+    return new Promise((res, rej) => {
+      db.any(stmt, params).then(result => res(result)).catch(err => rej(err));
+    });
+  }
+
+  static run(stmt, params) {
+    return new Promise((res, rej) => {
       db.any(stmt, params).then(result => res(result)).catch(err => rej(err));
     });
   }

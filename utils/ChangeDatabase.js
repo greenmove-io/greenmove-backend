@@ -4,13 +4,15 @@ const crypto = require("crypto");
 const readline = require('readline');
 import { closed } from '../db/repository';
 import { calculateRating, calculateAQI, calculatePopulationDensity } from './CalculateData';
-import { PlaceFetch } from './FetchData';
-import { createBlob, createTree, getBranch, addCommit, updateHead } from './GitHubAPI';
+import { PlaceFetch, overpassAPI } from './FetchData';
+import { PushBoundary, createBlob } from './GitHubAPI';
 const CITY_DATA = require('../assets/json/uk-cities.json');
 
 const {
   aqi_levels,
   GEOJSON_PRESET,
+  BUS_STOPS_OSM,
+  // CITY_DATA
 } = require('../config');
 
 const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
@@ -24,6 +26,7 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
             process.stdout.write(`Progress: (${placesLength - i}/${placesLength}) ${place.name}`);
 
             place = { ...place, ...placeData };
+            if(!isUpdating) place.place_id = crypto.randomBytes(8).toString("hex");
             place.rating = calculateRating(place);
             place.air_quality_label = aqi_levels.find(x => x[0] > place.air_quality)[1];
 
@@ -44,23 +47,21 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
             // console.log(place);
 
             if(!isUpdating) {
-                place.place_id = crypto.randomBytes(8).toString("hex");
-
                 res({
-                  statements: {
-                    core: ["INSERT INTO places (place_id, place_type, name, county, country, rating, last_updated) VALUES ($1, $2, $3, $4, $5, $6, $7)", [place.place_id, 'CITY', place.name, place.county, place.country, place.rating, ct]],
-                    props: ["INSERT INTO places_properties (place_id, wiki_item, osm_id, area, boundary_id, area_inaccurate, latitude, longitude, population, postcode_districts) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", [place.place_id, place.wiki_item, place.osm_id, place.area, place.boundary_id, place.area_inaccurate, place.latitude, place.longitude, place.population, place.postcode_districts ]],
-                    quals: ["INSERT INTO places_qualities (place_id, air_quality, air_quality_label, population_density) VALUES ($1, $2, $3, $4)", [place.place_id, place.air_quality, place.air_quality_label, place.population_density ]]
-                  },
+                  statements: [
+                    ["INSERT INTO places (place_id, place_type, name, county, country, rating, last_updated) VALUES ($1, $2, $3, $4, $5, $6, $7)", [place.place_id, 'CITY', place.name, place.county, place.country, place.rating, ct]],
+                    ["INSERT INTO places_properties (place_id, wiki_item, osm_id, area, boundary_id, area_inaccurate, latitude, longitude, population, postcode_districts) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", [place.place_id, place.wiki_item, place.osm_id, place.area, place.boundary_id, place.area_inaccurate, place.latitude, place.longitude, place.population, place.postcode_districts ]],
+                    ["INSERT INTO places_qualities (place_id, air_quality, air_quality_label, population_density) VALUES ($1, $2, $3, $4)", [place.place_id, place.air_quality, place.air_quality_label, place.population_density ]]
+                  ],
                   ...place
                 });
             } else {
                 res({
-                  statements: {
-                    core: ["UPDATE places SET last_updated = $1, rating = $2 WHERE place_id = $3", [ct, place.rating, place.place_id]],
-                    props: ["UPDATE places_properties SET area = $1, latitude = $2, longitude = $3, population = $4, postcode_districts = $5 WHERE place_id = $6", [place.area, place.latitude, place.longitude, place.population, place.postcode_districts, place.place_id]],
-                    quals: ["UPDATE places_qualities SET air_quality = $1, air_quality_label = $2, population_density = $3 WHERE place_id = $4", [place.air_quality, place.air_quality_label, place.population_density, place.place_id]]
-                  },
+                  statements: [
+                    ["UPDATE places SET last_updated = $1, rating = $2 WHERE place_id = $3", [ct, place.rating, place.place_id]],
+                    ["UPDATE places_properties SET area = $1, latitude = $2, longitude = $3, population = $4, postcode_districts = $5 WHERE place_id = $6", [place.area, place.latitude, place.longitude, place.population, place.postcode_districts, place.place_id]],
+                    ["UPDATE places_qualities SET air_quality = $1, air_quality_label = $2, population_density = $3 WHERE place_id = $4", [place.air_quality, place.air_quality_label, place.population_density, place.place_id]]
+                  ],
                   ...place
                 });
             }
@@ -78,19 +79,17 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
 
 const setup = async (ct, places, isUpdating) => {
   return Promise.all(places.map((place, i) => fillStatement(ct, place, isUpdating, i, places.length)))
-  .then((data) => {
-    return(data);
-  }).catch(err => {
+  .then((data) => data)
+  .catch(err => {
     console.log('There was an error with a place: ', err);
   });
 }
 
-const workWithPlaces = async (places) => {
-  console.log('');
-  console.log('Using place data for extra work');
+const handleBoundaries = async (places) => {
+  if(places[0].blob == undefined) return;
+  return new Promise(async (res, rej) => {
+    let treeData = [];
 
-  let treeData = [];
-  if(places[0].blob !== undefined) {
     places.map(place => {
       treeData.push({
         path: `places/boundaries/cities/${place.boundary_id}.json`,
@@ -100,17 +99,54 @@ const workWithPlaces = async (places) => {
       });
     });
 
-    let tree = await createTree(treeData).catch(err => console.error(err));
-    let branch = await getBranch("heads/file-storage").catch(err => console.error(err));
-    let commit = await addCommit(branch.object.sha, tree.sha, "Adding boundary data").catch(err => console.error(err));
-    let update = await updateHead('heads/file-storage', commit.sha, false).catch(err => console.error(err));
-  }
+    console.log('PUSHING BOUNDARIES TO GITHUB...');
+    const pushedBoundaries = await PushBoundary(treeData).catch(err => rej(err));
+
+    res();
+  });
+}
+
+const handleBusStops = async (places) => {
+  if(places[0].osm_id == undefined) return;
+  return new Promise(async (res, rej) => {
+    let query = '[out:json][timeout:240];\n';
+
+    console.log('QUERYING OVERPASS API FOR BUS STOPS...');
+    query += places.map(place => `${BUS_STOPS_OSM(place.osm_id)}`).join('\n');
+    let busStopsCount = await overpassAPI(query).catch(err => rej(err));
+    if(busStopsCount.elements !== undefined && busStopsCount.elements.length > 1) {
+      busStopsCount.elements;
+      busStopsCount.elements.length;
+    //   for(let i = 0; i < busStopsCount.elements.length; i+=2) {
+    //     let placeIndex = places.findIndex(x => x.osm_id == Number(busStopsCount.elements[i].tags.num));
+    //     console.log(places[placeIndex].name);
+    //     places[placeIndex].statements.push(["UPDATE places_qualities SET bus_stop_quantity = $1 WHERE place_id = $2", [Number(busStopsCount.elements[i+1].tags.num), places[placeIndex].place_id]])
+    //   }
+    } else {
+      rej('There was an error querying places bus stops');
+    }
+
+    res(places);
+  });
+}
+
+const workWithPlaces = async (places) => {
+  return new Promise(async (res, rej) => {
+    console.log('');
+    console.log('Using place data for extra work');
+    await handleBoundaries(places).catch(err => console.error(err));
+    // places = await handleBusStops(places).catch(err => console.error(err));
+
+    res(places);
+  });
 }
 
 const ChangeDatabase = async () => {
+  return;
   let data = await closed.checkPlacesData();
-  const { is_data } = data[0];
+  const { is_data } = data;
   let places = CITY_DATA;
+  let statements = [];
 
   if(!is_data) {
     console.log('Filling the database');
@@ -119,36 +155,12 @@ const ChangeDatabase = async () => {
     places = await closed.getAllPlaces();
   }
 
-  let coreStmts = [];
-  let propStmts = [];
-  let qualStmts = [];
+  places = await setup(Date.now(), places, is_data);
+  places = await workWithPlaces(places);
 
-  const placesData = await setup(Date.now(), places, is_data);
-  const workingWithPlaces = await workWithPlaces(placesData);
-
-  for(let i = 0; i < placesData.length; i++) {
-    if(placesData[i].statements !== undefined) {
-      coreStmts.push(placesData[i].statements.core);
-      propStmts.push(placesData[i].statements.props);
-      qualStmts.push(placesData[i].statements.quals);
-    }
-  }
-
-  closed.changePlaces(coreStmts).then(results => {
+  places.map(place => place.statements.map(stmt => statements.push(stmt)));
+  closed.changePlaces(statements).then(results => {
       console.log('Places changed successfully');
-
-      closed.changePlaces(propStmts).then(results => {
-          console.log('Places properties changed successfully');
-
-          closed.changePlaces(qualStmts).then(results => {
-              console.log('Places qualities changed successfully');
-
-          }).catch(err => {
-              console.error('BATCH FAILED ' + err);
-          });
-      }).catch(err => {
-          console.error('BATCH FAILED ' + err);
-      });
   }).catch(err => {
       console.error('BATCH FAILED ' + err);
   });

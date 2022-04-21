@@ -1,3 +1,4 @@
-export { default as cityRoutes } from './city.routes';
+export { default as cityRoute } from './city.routes';
+export { default as placesRoute } from './places.routes';
 
-export { default as pushRoutes } from './push.routes';
+export { default as pushRoute } from './push.routes';

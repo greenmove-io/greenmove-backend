@@ -5,7 +5,6 @@ import BoundaryData from './BoundaryData';
 const {
   required_props,
   CITY_SPARQL,
-  BUS_STOPS_OSM,
   WIKIDATA_API_URL,
   AQICN_API_URL,
   AQICN_API_KEY,
@@ -59,13 +58,10 @@ const postcodeDistricts = async (data) => {
   });
 }
 
-const overpassAPI = async (data) => {
+export const overpassAPI = async (data) => {
   return new Promise((res, rej) => {
-    axios.get(`${OVERPASS_API_URL}/api/interpreter`, {
-      params: {
-        data: data
-      }
-    }).then(results => {
+    axios.post(`${OVERPASS_API_URL}/api/interpreter`, new URLSearchParams({data: data}), {headers: {"Content-Type": "application/x-www-form-urlencoded"}})
+    .then(results => {
       return res(results.data);
     }).catch(err => {
       console.log(err);
@@ -141,7 +137,6 @@ export const PlaceFetch = async ({ name, last_updated }) => {
     let aqi = await airQuality(wikiData).catch(err => rej(err));
     let pc = await postcodeDistricts(wikiData).catch(err => rej(err));
     let postcodes = pc.map(x => x.outcode);
-    // let busStopsCount = await overpassAPI(BUS_STOPS_OSM(osm_id)).catch(err => rej(err));
 
     let data = {...wikiData, air_quality: aqi, postcode_districts: postcodes, osm_id, geometry, area, area_inaccurate};
     let returnData = {};
