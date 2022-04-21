@@ -16,7 +16,7 @@ if(!IS_LOCAL_DEV) ssl = { rejectUnauthorized: false };
 const db = pgp({
   connectionString: DATABASE_URL,
   max: 30,
-  ssl: ssl
+  ssl: { rejectUnauthorized: false }
 });
 
 module.exports = db;
