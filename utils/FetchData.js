@@ -9,7 +9,8 @@ const {
   AQICN_API_URL,
   AQICN_API_KEY,
   POSTCODESIO_API_URL,
-  OVERPASS_API_URL
+  OVERPASS_API_URL,
+  BUS_STOPS_OSM
 } = require('../config');
 
 const airQuality = async (data) => {
@@ -70,16 +71,16 @@ export const overpassAPI = async (data) => {
   });
 }
 
-export const PlaceFetch = async ({ name, last_updated }) => {
+export const PlaceFetch = async (place) => {
   return new Promise(async (res, rej) => {
-    let wikiRequest = await wikidataRequest(CITY_SPARQL(name)).catch(err => rej(err));
+    let wikiRequest = await wikidataRequest(CITY_SPARQL(place.name)).catch(err => rej(err));
     let wikiData = {};
     let i = 0;
     let highestPop = 0;
     let highestPopI = 0;
     if(!wikiRequest.results.bindings < 1) {
       for(const result of wikiRequest.results.bindings) {
-        if(result.name.value.includes(name)) {
+        if(result.name.value.includes(place.name)) {
           if(result.population) {
             if(result.population.value > highestPop) {
               highestPop = result.population.value;
@@ -95,35 +96,34 @@ export const PlaceFetch = async ({ name, last_updated }) => {
       }
     }
 
-    let osm_id, area, geometry, area_inaccurate;
+    if(place.last_updated == undefined) {
+      place.last_updated = new Date();
+      place.last_updated.setMinutes(place.last_updated.getMinutes() - (60 * 180));
+    }
 
-    if(last_updated !== undefined) {
-      let nu = new Date(last_updated);
-      nu.setMinutes(nu.getMinutes() + (60 * 120));
+    if(place.last_updated !== undefined) {
+      let nu = new Date(place.last_updated);
+      nu.setMinutes(nu.getMinutes() + (60 * 168));
       let ct = new Date();
 
       if(nu <= ct) {
-        const bd = await BoundaryData(name).catch(err => rej(err));
-        osm_id = bd['osm_id'];
-        area = bd['area'];
-        geometry = bd['geometry'];
-        area_inaccurate = bd['area_inaccurate'];
+        const bd = await BoundaryData(place.name).catch(err => rej(err));
+        place.osm_id = bd['osm_id'];
+        place.area = bd['area'];
+        place.geometry = bd['geometry'];
+        place.area_inaccurate = bd['area_inaccurate'];
+
+        let busStopsCount = await overpassAPI(BUS_STOPS_OSM(place.osm_id)).catch(err => rej(err));
+        place.bus_stop_quantity = Number(busStopsCount.elements[0].tags.num);
+        console.log('hello world!');
       }
-    } else {
-        const bd = await BoundaryData(name).catch(err => rej(err));
-        osm_id = bd['osm_id'];
-        area = bd['area'];
-        geometry = bd['geometry'];
-        area_inaccurate = bd['area_inaccurate'];
     }
 
 
-    if(wikiData.item) {
-      wikiData.wiki_item = wikiData.item.split('/')[4];
-    }
+    if(wikiData.item) wikiData.wiki_item = wikiData.item.split('/')[4];
 
-    if(wikiData.area == undefined && area !== undefined) {
-      wikiData.area = area;
+    if(wikiData.area == undefined && place.area !== undefined) {
+      wikiData.area = place.area;
     } else {
       wikiData.area = Number(wikiData.area);
     }
@@ -138,7 +138,7 @@ export const PlaceFetch = async ({ name, last_updated }) => {
     let pc = await postcodeDistricts(wikiData).catch(err => rej(err));
     let postcodes = pc.map(x => x.outcode);
 
-    let data = {...wikiData, air_quality: aqi, postcode_districts: postcodes, osm_id, geometry, area, area_inaccurate};
+    let data = {...wikiData, air_quality: aqi, postcode_districts: postcodes, bus_stop_quantity: place.bus_stop_quantity, osm_id: place.osm_id, geometry: place.geometry, area: place.area, area_inaccurate: place.area_inaccurate};
     let returnData = {};
     for(let prop of required_props) {
       if(data[prop] !== undefined) {

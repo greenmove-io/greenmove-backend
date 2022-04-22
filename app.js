@@ -1,6 +1,6 @@
 import express from 'express';
 import { ChangeDatabase } from './utils';
-import { placesRoute, pushRoute } from './routes';
+import { placesRoute } from './routes';
 import { authMiddleware, authenticated } from './controllers/auth.controller';
 
 const CITY_DATA = require('./assets/json/uk-cities.json');
@@ -21,8 +21,7 @@ app.use(authMiddleware);
 ChangeDatabase();
 
 app.use('/places', placesRoute);
-
-app.use('/push', authenticated, pushRoute);
+app.post('*', authenticated);
 
 app.use((req, res, next) => {
     const error = new Error(`Cannot find ${req.originalUrl} on this server!`);

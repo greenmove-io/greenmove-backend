@@ -50,8 +50,7 @@ exports.CITY_SPARQL = (city) => `
 `;
 
 exports.BUS_STOPS_OSM = (osmID) => `
-  make here_a_new_block_begins num = ${osmID};
-  out;
+  [out:json][timeout:240];
   rel(${osmID});
   map_to_area;
   nwr[highway=bus_stop](area) -> .all;

@@ -35,7 +35,6 @@ export class open {
   static async getPlace(id) {
     return dao.get(`
       SELECT
-        places.place_id,
       	places.name,
         places.county,
         places.country,
@@ -114,6 +113,6 @@ export class closed {
   }
 
   static async insertVehicleCount(quantity, id) {
-    return dao.run(`UPDATE places_qualities SET number_vehicles = $1 WHERE places_id = $2`, [quantity, id]);
+    return dao.run(`UPDATE places_qualities SET vehicle_quantity = $1 WHERE place_id = $2`, [quantity, id]);
   }
 }
