@@ -115,7 +115,6 @@ export const PlaceFetch = async (place) => {
 
         let busStopsCount = await overpassAPI(BUS_STOPS_OSM(place.osm_id)).catch(err => rej(err));
         place.bus_stop_quantity = Number(busStopsCount.elements[0].tags.num);
-        console.log('hello world!');
       }
     }
 

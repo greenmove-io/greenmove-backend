@@ -1,5 +1,6 @@
 import { open, closed } from '../db/repository';
 import { numberWithCommas } from '../utils/functions';
+import { calculateAQI } from '../utils/calculateData';
 import { GetBoundary } from '../utils/GitHubAPI';
 
 export const getPlaces = async (req, res) => {
@@ -8,6 +9,7 @@ export const getPlaces = async (req, res) => {
   places = places.map(x => {
     x.population = numberWithCommas(x.population);
     x.area = Math.round(((x.area / 1000000) + Number.EPSILON) * 100) / 100;
+    x.air_quality = calculateAQI(x.air_quality);
     return x;
   });
 
@@ -30,6 +32,7 @@ export const getPlace = async (req, res) => {
 
   place.population = numberWithCommas(place.population);
   place.area = Math.round(((place.area / 1000000) + Number.EPSILON) * 100) / 100;
+  place.air_quality = calculateAQI(place.air_quality);
 
   return res.status(200).send({ status: 'success', data: place });
 }
@@ -57,6 +60,7 @@ export const searchPlaces = async (req, res) => {
 
   place.population = numberWithCommas(place.population);
   place.area = Math.round(((place.area / 1000000) + Number.EPSILON) * 100) / 100;
+  place.air_quality = calculateAQI(place.air_quality);
 
   return res.status(200).send({ status: 'success', data: place });
 }

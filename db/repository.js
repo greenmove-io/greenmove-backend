@@ -17,6 +17,11 @@ export class open {
         places_properties.postcode_districts,
         places_qualities.air_quality,
         places_qualities.air_quality_label,
+        places_qualities.water_quality,
+        places_qualities.greenspace,
+        places_qualities.waste_recycling,
+        places_qualities.vehicle_quantity,
+        places_qualities.bus_stop_quantity,
         places_qualities.population_density
       FROM places
       INNER JOIN places_properties ON places_properties.place_id = places.place_id
@@ -47,6 +52,11 @@ export class open {
         places_properties.postcode_districts,
         places_qualities.air_quality,
         places_qualities.air_quality_label,
+        places_qualities.water_quality,
+        places_qualities.greenspace,
+        places_qualities.waste_recycling,
+        places_qualities.vehicle_quantity,
+        places_qualities.bus_stop_quantity,
         places_qualities.population_density
       FROM places
       INNER JOIN places_properties ON places_properties.place_id = places.place_id
@@ -71,6 +81,11 @@ export class open {
         places_properties.postcode_districts,
         places_qualities.air_quality,
         places_qualities.air_quality_label,
+        places_qualities.water_quality,
+        places_qualities.greenspace,
+        places_qualities.waste_recycling,
+        places_qualities.vehicle_quantity,
+        places_qualities.bus_stop_quantity,
         places_qualities.population_density
       FROM places
       INNER JOIN places_properties ON places_properties.place_id = places.place_id
