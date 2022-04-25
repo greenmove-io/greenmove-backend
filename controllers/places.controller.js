@@ -1,6 +1,6 @@
 import { open, closed } from '../db/repository';
 import { numberWithCommas } from '../utils/functions';
-import { calculateAQI } from '../utils/calculateData';
+import { calculateAQI } from '../utils/CalculateData';
 import { GetBoundary } from '../utils/GitHubAPI';
 
 export const getPlaces = async (req, res) => {
