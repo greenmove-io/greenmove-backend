@@ -116,6 +116,7 @@ const workWithPlaces = async (places) => {
 }
 
 const ChangeDatabase = async () => {
+  return;
   let data = await closed.checkPlacesData();
   const { is_data } = data;
   let places = CITY_DATA;
@@ -132,10 +133,10 @@ const ChangeDatabase = async () => {
   places = await workWithPlaces(places);
 
   places.map(place => place.statements.map(stmt => statements.push(stmt)));
-  closed.changePlaces(statements).then(results => {
-      console.log('Places changed successfully');
-  }).catch(err => {
-      console.error('BATCH FAILED ' + err);
-  });
+  // closed.changePlaces(statements).then(results => {
+  //     console.log('Places changed successfully');
+  // }).catch(err => {
+  //     console.error('BATCH FAILED ' + err);
+  // });
 }
 export default ChangeDatabase;

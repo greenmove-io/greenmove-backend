@@ -9,6 +9,7 @@ export class open {
         places.county,
         places.country,
         places.rating,
+        places.last_updated,
         places_properties.area,
         places_properties.area_inaccurate,
         places_properties.latitude,
@@ -26,6 +27,7 @@ export class open {
       FROM places
       INNER JOIN places_properties ON places_properties.place_id = places.place_id
       INNER JOIN places_qualities ON places_qualities.place_id = places.place_id
+      ORDER BY places.name ASC
     `);
   }
 
@@ -44,6 +46,7 @@ export class open {
         places.county,
         places.country,
         places.rating,
+        places.last_updated,
         places_properties.area,
         places_properties.area_inaccurate,
         places_properties.latitude,
@@ -73,6 +76,7 @@ export class open {
         places.county,
         places.country,
         places.rating,
+        places.last_updated,
         places_properties.area,
         places_properties.area_inaccurate,
         places_properties.latitude,

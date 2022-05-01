@@ -1,3 +1,5 @@
+import { numberWithCommas } from '../utils/functions';
+import { calculateAQI } from '../utils/CalculateData';
 
 export default class Place {
   constructor() {
@@ -31,5 +33,17 @@ export default class Place {
 
   calculateRating() {
 
+  }
+
+  format(place) {
+    place.rating = Number(place.rating);
+    place.last_updated = Number(place.last_updated);
+    place.population = numberWithCommas(place.population);
+    place.area = Math.round(((place.area / 1000000) + Number.EPSILON) * 100) / 100;
+    place.air_quality = calculateAQI(place.air_quality);
+    place.vehicle_quantity = numberWithCommas(place.vehicle_quantity);
+    place.bus_stop_quantity = numberWithCommas(place.bus_stop_quantity);
+    place.population_density = numberWithCommas(place.population_density);
+    return place;
   }
 }
