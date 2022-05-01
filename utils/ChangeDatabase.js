@@ -3,7 +3,7 @@ const path = require('path');
 const crypto = require("crypto");
 const readline = require('readline');
 import { closed } from '../db/repository';
-import { calculateRating, calculateAQI, calculatePopulationDensity } from './CalculateData';
+import CalculateData from './CalculateData';
 import { PlaceFetch, overpassAPI } from './FetchData';
 import { PushBoundary, createBlob } from './GitHubAPI';
 const CITY_DATA = require('../assets/json/uk-cities.json');
@@ -26,14 +26,11 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
 
             place = { ...place, ...placeData };
             if(!isUpdating) place.place_id = crypto.randomBytes(8).toString("hex");
-            place.rating = calculateRating(place);
+            place.rating = CalculateData.rating(place);
             place.air_quality_label = aqi_levels.find(x => x[0] > place.air_quality)[1];
-
-            if(place.population !== null && place.area !== null) {
-              place.population_density = calculatePopulationDensity(place.population, place.area);
-            } else {
-              place.population_density = null;
-            }
+            place.population_density = CalculateData.populationDensity(place.population, place.area);
+            place.vehicle_population_ratio = CalculateData.vehiclePopulationRatio(place.vehicle_quantity, place.population);
+            place.bus_stop_population_ratio = CalculateData.busStopPopulationRatio(place.bus_stop_quantity, place.population);
 
             if(place.geometry !== undefined) {
               let gj = GEOJSON_PRESET;
@@ -77,8 +74,36 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
 }
 
 const setup = async (ct, places, isUpdating) => {
-  return Promise.all(places.map((place, i) => fillStatement(ct, place, isUpdating, i, places.length)))
-  .then((data) => data)
+  let qualities_range = {
+    max_air_quality: 0,
+    min_air_quality: 500,
+    max_population_density: 0,
+    min_population_density: 99999,
+    max_vehicle_population_ratio: 0,
+    min_vehicle_population_ratio: 999,
+    max_bus_stop_population_ratio: 0,
+    min_bus_stop_population_ratio: 9999
+  }
+
+  return Promise.all(
+    places.map(async (place, i) => {
+      let result = await fillStatement(ct, place, isUpdating, i, places.length);
+      Object.keys(qualities_range).forEach((k, i) => {
+        let key = k.slice(4);
+        if(i % 2 == 0) {
+          if(result[key] > qualities_range[k]) qualities_range[k] = result[key];
+        } else {
+          if(result[key] < qualities_range[k]) qualities_range[k] = result[key];
+        }
+      });
+
+      return result;
+    })
+  ).then((data) => {
+    data.qualities_range = qualities_range;
+
+    return data;
+  })
   .catch(err => {
     console.log('There was an error with a place: ', err);
   });
@@ -105,18 +130,38 @@ const handleBoundaries = async (places) => {
   });
 }
 
+const handleRating = async (places) => {
+  return new Promise(async (res, rej) => {
+    console.log(`min: ${places.qualities_range.min_population_density} max: ${places.qualities_range.max_population_density}`);
+
+    // https://stackoverflow.com/questions/25835591/how-to-calculate-percentage-between-the-range-of-two-values-a-third-value-is
+    places.map(place => {
+      let AQIPercentage = 100 - CalculateData.rangePercentage(places.qualities_range.min_air_quality, places.qualities_range.max_air_quality, place.air_quality);
+      let PDPercentage = 100 - CalculateData.rangePercentage(places.qualities_range.min_population_density, places.qualities_range.max_population_density, place.population_density);
+      // let VRPercentage = CalculateData.rangePercentage(places.qualities_range.min_vehicle_population_ratio, places.qualities_range.max_vehicle_population_ratio, place.vehicle_quantity);
+      // let BSRPercentage = CalculateData.rangePercentage(places.qualities_range.min_bus_stop_population_ratio, places.qualities_range.max_bus_stop_population_ratio, place.bus_stop_quantity);
+
+      let totalPercentage = ((AQIPercentage + PDPercentage) / 200) * 100;
+      let rating = Math.round(((totalPercentage / 20) + Number.EPSILON) * 100) / 100;
+      console.log(`${place.name}: ${PDPercentage}%`);
+    });
+
+    res(places);
+  });
+}
+
 const workWithPlaces = async (places) => {
   return new Promise(async (res, rej) => {
     console.log('');
     console.log('Using place data for extra work');
     await handleBoundaries(places).catch(err => console.error(err));
+    places = handleRating(places).catch(err => console.error(err));
 
     res(places);
   });
 }
 
 const ChangeDatabase = async () => {
-  return;
   let data = await closed.checkPlacesData();
   const { is_data } = data;
   let places = CITY_DATA;
@@ -132,7 +177,7 @@ const ChangeDatabase = async () => {
   places = await setup(Date.now(), places, is_data);
   places = await workWithPlaces(places);
 
-  places.map(place => place.statements.map(stmt => statements.push(stmt)));
+  // places.map(place => place.statements.map(stmt => statements.push(stmt)));
   // closed.changePlaces(statements).then(results => {
   //     console.log('Places changed successfully');
   // }).catch(err => {
