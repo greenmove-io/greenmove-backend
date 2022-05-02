@@ -23,16 +23,4 @@ const rangePercentage = (min, max, value) => {
   return ((value - min) * 100) / (max - min);
 }
 
-const rating = ({ name, air_quality, population, area }) => {
-  // let AQIPercentage = AQIPercentage(air_quality);
-  // let AQIRating = Math.round(((AQIpercentage / 20) + Number.EPSILON) * 100) / 100;
-
-  // let populationDensity = populationDensity(population, area);
-  // let PDPercentage = PDPercentage(populationDensity, population);
-  //
-  // let totalPercentage = ((AQIPercentage + PDPercentage) / 200) * 100;
-  // let rating = Math.round(((totalPercentage / 20) + Number.EPSILON) * 100) / 100;
-
-  return 0;
-}
-export default { AQIPercentage, populationDensity, PDPercentage, busStopPopulationRatio, vehiclePopulationRatio, rangePercentage, rating };
+export default { AQIPercentage, populationDensity, PDPercentage, busStopPopulationRatio, vehiclePopulationRatio, rangePercentage };

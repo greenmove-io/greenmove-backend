@@ -15,7 +15,7 @@ exports.OVERPASS_API_URL = process.env.OVERPASS_API_URL;
 exports.GITHUB_API_KEY = process.env.GITHUB_API_KEY;
 exports.GITHUB_BRANCH = process.env.GITHUB_BRANCH;
 
-exports.required_props = ['wiki_item', 'osm_id', 'population', 'postcode_districts', 'area', 'latitude', 'longitude', 'air_quality', 'air_quality_label', 'geometry', 'area_inaccurate'];
+exports.required_props = ['wiki_item', 'osm_id', 'population', 'postcode_districts', 'area', 'latitude', 'longitude', 'air_quality', 'air_quality_label', 'geometry', 'area_inaccurate', 'vehicle_quantity', 'bus_stop_quantity'];
 exports.aqi_levels = [[0, 'Good'], [50, 'Good'], [100, 'Moderate'], [150, 'Unhealthy for Sensitive Groups'], [200, 'Unhealthy'], [300, 'Very Unhealthy'], [500, 'Hazardous']];
 exports.GEOJSON_PRESET = {
     "type":"FeatureCollection",

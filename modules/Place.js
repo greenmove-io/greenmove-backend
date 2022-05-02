@@ -1,5 +1,5 @@
 import { numberWithCommas } from '../utils/functions';
-import { calculateAQI } from '../utils/CalculateData';
+import CalculateData from '../utils/CalculateData';
 
 export default class Place {
   constructor() {
@@ -40,8 +40,8 @@ export default class Place {
     place.last_updated = Number(place.last_updated);
     place.population = numberWithCommas(place.population);
     place.area = Math.round(((place.area / 1000000) + Number.EPSILON) * 100) / 100;
-    place.air_quality = calculateAQI(place.air_quality);
-    place.vehicle_quantity = numberWithCommas(place.vehicle_quantity);
+    place.air_quality = CalculateData.AQIPercentage(place.air_quality);
+    if(place.vehicle_quantity !== null) place.vehicle_quantity = numberWithCommas(place.vehicle_quantity);
     place.bus_stop_quantity = numberWithCommas(place.bus_stop_quantity);
     place.population_density = numberWithCommas(place.population_density);
     return place;

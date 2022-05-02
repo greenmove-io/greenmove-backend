@@ -24,6 +24,8 @@ CREATE TABLE places_properties (
   latitude NUMERIC(16, 12),
   longitude NUMERIC(16, 12),
   population BIGINT,
+  bus_stop_quantity INTEGER,
+  vehicle_quantity INTEGER,
   postcode_districts VARCHAR [],
   CONSTRAINT fk_place FOREIGN KEY(place_id) REFERENCES places(place_id)
 );
@@ -35,9 +37,7 @@ CREATE TABLE places_qualities (
   water_quality INTEGER,
   greenspace INTEGER,
   waste_recycling INTEGER,
-  vehicle_quantity INTEGER,
   vehicle_population_ratio NUMERIC(8, 2),
-  bus_stop_quantity INTEGER,
   bus_stop_population_ratio NUMERIC(8, 2),
   population_density INTEGER,
   CONSTRAINT fk_place FOREIGN KEY(place_id) REFERENCES places(place_id)

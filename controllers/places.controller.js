@@ -1,6 +1,4 @@
 import { open, closed } from '../db/repository';
-import { numberWithCommas } from '../utils/functions';
-import { calculateAQI } from '../utils/CalculateData';
 import { GetBoundary } from '../utils/GitHubAPI';
 import { Place } from '../modules';
 

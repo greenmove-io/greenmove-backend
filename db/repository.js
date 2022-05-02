@@ -15,14 +15,14 @@ export class open {
         places_properties.latitude,
         places_properties.longitude,
         places_properties.population,
+        places_properties.vehicle_quantity,
+        places_properties.bus_stop_quantity,
         places_properties.postcode_districts,
         places_qualities.air_quality,
         places_qualities.air_quality_label,
         places_qualities.water_quality,
         places_qualities.greenspace,
         places_qualities.waste_recycling,
-        places_qualities.vehicle_quantity,
-        places_qualities.bus_stop_quantity,
         places_qualities.population_density
       FROM places
       INNER JOIN places_properties ON places_properties.place_id = places.place_id
@@ -52,14 +52,14 @@ export class open {
         places_properties.latitude,
         places_properties.longitude,
         places_properties.population,
+        places_properties.vehicle_quantity,
+        places_properties.bus_stop_quantity,
         places_properties.postcode_districts,
         places_qualities.air_quality,
         places_qualities.air_quality_label,
         places_qualities.water_quality,
         places_qualities.greenspace,
         places_qualities.waste_recycling,
-        places_qualities.vehicle_quantity,
-        places_qualities.bus_stop_quantity,
         places_qualities.population_density
       FROM places
       INNER JOIN places_properties ON places_properties.place_id = places.place_id
@@ -82,14 +82,14 @@ export class open {
         places_properties.latitude,
         places_properties.longitude,
         places_properties.population,
+        places_properties.vehicle_quantity,
+        places_properties.bus_stop_quantity,
         places_properties.postcode_districts,
         places_qualities.air_quality,
         places_qualities.air_quality_label,
         places_qualities.water_quality,
         places_qualities.greenspace,
         places_qualities.waste_recycling,
-        places_qualities.vehicle_quantity,
-        places_qualities.bus_stop_quantity,
         places_qualities.population_density
       FROM places
       INNER JOIN places_properties ON places_properties.place_id = places.place_id
@@ -132,6 +132,6 @@ export class closed {
   }
 
   static async insertVehicleCount(quantity, id) {
-    return dao.run(`UPDATE places_qualities SET vehicle_quantity = $1 WHERE place_id = $2`, [quantity, id]);
+    return dao.run(`UPDATE places_properties SET vehicle_quantity = $1 WHERE place_id = $2`, [quantity, id]);
   }
 }

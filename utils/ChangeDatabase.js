@@ -19,18 +19,20 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
       setTimeout(async () => {
         await PlaceFetch(place).then(async (placeData) => {
           if(placeData !== undefined) {
-
             readline.clearLine(process.stdout);
             readline.cursorTo(process.stdout, 0);
             process.stdout.write(`Progress: (${placesLength - i}/${placesLength}) ${place.name}`);
 
             place = { ...place, ...placeData };
             if(!isUpdating) place.place_id = crypto.randomBytes(8).toString("hex");
-            place.rating = CalculateData.rating(place);
             place.air_quality_label = aqi_levels.find(x => x[0] > place.air_quality)[1];
             place.population_density = CalculateData.populationDensity(place.population, place.area);
-            place.vehicle_population_ratio = CalculateData.vehiclePopulationRatio(place.vehicle_quantity, place.population);
             place.bus_stop_population_ratio = CalculateData.busStopPopulationRatio(place.bus_stop_quantity, place.population);
+            if(place.vehicle_quantity !== undefined && place.vehicle_quantity !== null) {
+              place.vehicle_population_ratio = CalculateData.vehiclePopulationRatio(place.vehicle_quantity, place.population);
+            } else {
+              place.vehicle_population_ratio = null;
+            }
 
             if(place.geometry !== undefined) {
               let gj = GEOJSON_PRESET;
@@ -46,8 +48,8 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
                 res({
                   statements: [
                     ["INSERT INTO places (place_id, place_type, name, county, country, rating, last_updated) VALUES ($1, $2, $3, $4, $5, $6, $7)", [place.place_id, 'CITY', place.name, place.county, place.country, place.rating, ct]],
-                    ["INSERT INTO places_properties (place_id, wiki_item, osm_id, area, boundary_id, area_inaccurate, latitude, longitude, population, postcode_districts) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", [place.place_id, place.wiki_item, place.osm_id, place.area, place.boundary_id, place.area_inaccurate, place.latitude, place.longitude, place.population, place.postcode_districts ]],
-                    ["INSERT INTO places_qualities (place_id, air_quality, air_quality_label, bus_stop_quantity, population_density) VALUES ($1, $2, $3, $4, $5)", [place.place_id, place.air_quality, place.air_quality_label, place.bus_stop_quantity, place.population_density ]]
+                    ["INSERT INTO places_properties (place_id, wiki_item, osm_id, area, boundary_id, area_inaccurate, latitude, longitude, population, bus_stop_quantity, postcode_districts) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)", [place.place_id, place.wiki_item, place.osm_id, place.area, place.boundary_id, place.area_inaccurate, place.latitude, place.longitude, place.population, place.bus_stop_quantity, place.postcode_districts ]],
+                    ["INSERT INTO places_qualities (place_id, air_quality, air_quality_label, bus_stop_population_ratio, population_density) VALUES ($1, $2, $3, $4, $5)", [place.place_id, place.air_quality, place.air_quality_label, place.bus_stop_population_ratio, place.population_density ]]
                   ],
                   ...place
                 });
@@ -55,8 +57,8 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
                 res({
                   statements: [
                     ["UPDATE places SET last_updated = $1, rating = $2 WHERE place_id = $3", [ct, place.rating, place.place_id]],
-                    ["UPDATE places_properties SET area = $1, latitude = $2, longitude = $3, population = $4, postcode_districts = $5 WHERE place_id = $6", [place.area, place.latitude, place.longitude, place.population, place.postcode_districts, place.place_id]],
-                    ["UPDATE places_qualities SET air_quality = $1, air_quality_label = $2, bus_stop_quantity = $3, population_density = $4 WHERE place_id = $5", [place.air_quality, place.air_quality_label, place.bus_stop_quantity, place.population_density, place.place_id]]
+                    ["UPDATE places_properties SET area = $1, latitude = $2, longitude = $3, population = $4, bus_stop_quantity = $5, postcode_districts = $6 WHERE place_id = $7", [place.area, place.latitude, place.longitude, place.population, place.bus_stop_quantity, place.postcode_districts, place.place_id]],
+                    ["UPDATE places_qualities SET air_quality = $1, air_quality_label = $2, bus_stop_population_ratio = $3, vehicle_population_ratio = $4, population_density = $5 WHERE place_id = $6", [place.air_quality, place.air_quality_label, place.bus_stop_population_ratio, place.vehicle_population_ratio, place.population_density, place.place_id]]
                   ],
                   ...place
                 });
@@ -88,14 +90,16 @@ const setup = async (ct, places, isUpdating) => {
   return Promise.all(
     places.map(async (place, i) => {
       let result = await fillStatement(ct, place, isUpdating, i, places.length);
-      Object.keys(qualities_range).forEach((k, i) => {
-        let key = k.slice(4);
-        if(i % 2 == 0) {
-          if(result[key] > qualities_range[k]) qualities_range[k] = result[key];
-        } else {
-          if(result[key] < qualities_range[k]) qualities_range[k] = result[key];
-        }
-      });
+      if(result.name !== 'London') {
+        Object.keys(qualities_range).forEach((k, i) => {
+          let key = k.slice(4);
+          if(i % 2 == 0) {
+            if(result[key] > qualities_range[k]) qualities_range[k] = result[key];
+          } else {
+            if(result[key] < qualities_range[k]) qualities_range[k] = result[key];
+          }
+        });
+      }
 
       return result;
     })
@@ -132,18 +136,27 @@ const handleBoundaries = async (places) => {
 
 const handleRating = async (places) => {
   return new Promise(async (res, rej) => {
-    console.log(`min: ${places.qualities_range.min_population_density} max: ${places.qualities_range.max_population_density}`);
 
     // https://stackoverflow.com/questions/25835591/how-to-calculate-percentage-between-the-range-of-two-values-a-third-value-is
-    places.map(place => {
+    places = places.map(place => {
       let AQIPercentage = 100 - CalculateData.rangePercentage(places.qualities_range.min_air_quality, places.qualities_range.max_air_quality, place.air_quality);
       let PDPercentage = 100 - CalculateData.rangePercentage(places.qualities_range.min_population_density, places.qualities_range.max_population_density, place.population_density);
-      // let VRPercentage = CalculateData.rangePercentage(places.qualities_range.min_vehicle_population_ratio, places.qualities_range.max_vehicle_population_ratio, place.vehicle_quantity);
-      // let BSRPercentage = CalculateData.rangePercentage(places.qualities_range.min_bus_stop_population_ratio, places.qualities_range.max_bus_stop_population_ratio, place.bus_stop_quantity);
+      let BSRPercentage = 100 - CalculateData.rangePercentage(places.qualities_range.min_bus_stop_population_ratio, places.qualities_range.max_bus_stop_population_ratio, place.bus_stop_population_ratio);
+      let VRPercentage = 100;
+      if(place.vehicle_population_ratio !== null) {
+         VRPercentage = 100 - CalculateData.rangePercentage(places.qualities_range.min_vehicle_population_ratio, places.qualities_range.max_vehicle_population_ratio, place.vehicle_population_ratio);
+      }
 
-      let totalPercentage = ((AQIPercentage + PDPercentage) / 200) * 100;
-      let rating = Math.round(((totalPercentage / 20) + Number.EPSILON) * 100) / 100;
-      console.log(`${place.name}: ${PDPercentage}%`);
+      let totalPercentage;
+      if(place.name == 'London') {
+        totalPercentage = ((AQIPercentage + PDPercentage) / 200) * 100;
+      } else {
+        totalPercentage = ((AQIPercentage + PDPercentage + BSRPercentage + VRPercentage) / 400) * 100;
+      }
+
+      place.rating = Math.round(((totalPercentage / 20) + Number.EPSILON) * 100) / 100;
+      place.statements.push(["UPDATE places SET rating = $1 WHERE place_id = $2", [place.rating, place.place_id]]);
+      return place;
     });
 
     res(places);
@@ -177,11 +190,11 @@ const ChangeDatabase = async () => {
   places = await setup(Date.now(), places, is_data);
   places = await workWithPlaces(places);
 
-  // places.map(place => place.statements.map(stmt => statements.push(stmt)));
-  // closed.changePlaces(statements).then(results => {
-  //     console.log('Places changed successfully');
-  // }).catch(err => {
-  //     console.error('BATCH FAILED ' + err);
-  // });
+  places.map(place => place.statements.map(stmt => statements.push(stmt)));
+  closed.changePlaces(statements).then(results => {
+      console.log('Places changed successfully');
+  }).catch(err => {
+      console.error('BATCH FAILED ' + err);
+  });
 }
 export default ChangeDatabase;
