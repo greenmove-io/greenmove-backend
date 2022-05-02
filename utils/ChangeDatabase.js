@@ -5,7 +5,7 @@ const readline = require('readline');
 import { closed } from '../db/repository';
 import CalculateData from './CalculateData';
 import { PlaceFetch, overpassAPI } from './FetchData';
-import { PushBoundary, createBlob } from './GitHubAPI';
+import GitHubAPI from './GitHubAPI';
 const CITY_DATA = require('../assets/json/uk-cities.json');
 
 const {
@@ -39,7 +39,7 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
               gj.features = [];
               gj.features.push({ "type": "Feature", "properties": { "name": `${place.name}`, "id": `${place.place_id}`, "possibly_inaccurate": placeData.area_inaccurate }, "geometry": placeData.geometry });
               place.boundary_id ??= crypto.randomBytes(16).toString("hex");
-              place.blob = await createBlob(gj).catch(err => rej(err));
+              place.blob = await GitHubAPI.createBlob(gj).catch(err => rej(err));
             }
 
             // console.log(place);
@@ -105,7 +105,6 @@ const setup = async (ct, places, isUpdating) => {
     })
   ).then((data) => {
     data.qualities_range = qualities_range;
-
     return data;
   })
   .catch(err => {
@@ -116,8 +115,9 @@ const setup = async (ct, places, isUpdating) => {
 const handleBoundaries = async (places) => {
   if(places[0].blob == undefined) return;
   return new Promise(async (res, rej) => {
-    let treeData = [];
+    const reset = await GitHubAPI.ResetBranch('dev-file-storage', 'ce9a79458fa950dde6ef468486893a8ecb47e6e0').catch(err => rej(err));
 
+    let treeData = [];
     places.map(place => {
       treeData.push({
         path: `places/boundaries/cities/${place.boundary_id}.json`,
@@ -128,7 +128,7 @@ const handleBoundaries = async (places) => {
     });
 
     console.log('PUSHING BOUNDARIES TO GITHUB...');
-    const pushedBoundaries = await PushBoundary(treeData).catch(err => rej(err));
+    const pushedBoundaries = await GitHubAPI.PushBoundary(treeData).catch(err => rej(err));
 
     res();
   });
