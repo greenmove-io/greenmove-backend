@@ -7,3 +7,7 @@ export const isObjectEmpty = (obj) => {
 export const numberWithCommas = (x) => {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
+
+export const roundTwoDecimal = (x) => {
+  return Math.round(((x) + Number.EPSILON) * 100) / 100;
+}

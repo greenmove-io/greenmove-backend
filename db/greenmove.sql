@@ -20,12 +20,18 @@ CREATE TABLE places_properties (
   osm_id INTEGER,
   area BIGINT,
   boundary_id VARCHAR(32),
+  boundary_last_updated BIGINT,
   area_inaccurate BOOLEAN,
   latitude NUMERIC(16, 12),
   longitude NUMERIC(16, 12),
   population BIGINT,
   bus_stop_quantity INTEGER,
   vehicle_quantity INTEGER,
+  bicycle_parking_quantity INTEGER,
+  walking_routes_quantity INTEGER,
+  walking_routes_length NUMERIC(16, 2),
+  cycling_routes_quantity INTEGER,
+  cycling_routes_length NUMERIC(16, 2),
   postcode_districts VARCHAR [],
   CONSTRAINT fk_place FOREIGN KEY(place_id) REFERENCES places(place_id)
 );
@@ -39,6 +45,7 @@ CREATE TABLE places_qualities (
   waste_recycling INTEGER,
   vehicle_population_ratio NUMERIC(8, 2),
   bus_stop_population_ratio NUMERIC(8, 2),
+  bicycle_parking_population_ratio NUMERIC(8, 2),
   population_density INTEGER,
   CONSTRAINT fk_place FOREIGN KEY(place_id) REFERENCES places(place_id)
 )

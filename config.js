@@ -15,8 +15,55 @@ exports.OVERPASS_API_URL = process.env.OVERPASS_API_URL;
 exports.GITHUB_API_KEY = process.env.GITHUB_API_KEY;
 exports.GITHUB_BRANCH = process.env.GITHUB_BRANCH;
 
-exports.required_props = ['wiki_item', 'osm_id', 'population', 'postcode_districts', 'area', 'latitude', 'longitude', 'air_quality', 'air_quality_label', 'geometry', 'area_inaccurate', 'vehicle_quantity', 'bus_stop_quantity'];
-exports.aqi_levels = [[0, 'Good'], [50, 'Good'], [100, 'Moderate'], [150, 'Unhealthy for Sensitive Groups'], [200, 'Unhealthy'], [300, 'Very Unhealthy'], [500, 'Hazardous']];
+exports.default_required_props = [
+  'place_id',
+  'place_type',
+  'name',
+  'county',
+  'country',
+  'rating',
+  'last_updated',
+];
+
+exports.properties_required_props = [
+  'wiki_item',
+  'osm_id',
+  'area',
+  'geometry',
+  'boundary_id',
+  'boundary_last_updated',
+  'area_inaccurate',
+  'latitude',
+  'longitude',
+  'population',
+  'bus_stop_quantity',
+  'vehicle_quantity',
+  'bicycle_parking_quantity',
+  'walking_routes_quantity',
+  'walking_routes_length',
+  'cycling_routes_quantity',
+  'cycling_routes_length',
+  'postcode_districts'
+];
+
+exports.qualities_required_props = [
+  'air_quality',
+  'air_quality_label',
+  'bus_stop_population_ratio',
+  'vehicle_population_ratio',
+  'bicycle_parking_population_ratio',
+  'population_density'
+];
+
+exports.aqi_levels = [
+  [0, 'Good'],
+  [50, 'Good'],
+  [100, 'Moderate'],
+  [150, 'Unhealthy for Sensitive Groups'],
+  [200, 'Unhealthy'],
+  [300, 'Very Unhealthy'],
+  [500, 'Hazardous']];
+
 exports.GEOJSON_PRESET = {
     "type":"FeatureCollection",
     "features":[]
@@ -59,6 +106,29 @@ exports.BUS_STOPS_OSM = (osmID) => `
       .count convert counter num = t['num'] + 1 -> .count;
   }
   .count out;
+`;
+
+exports.BICYCLE_PARKING_OSM = (osmID) => `
+  [out:json][timeout:60];
+  rel(${osmID});
+  map_to_area;
+  nwr["amenity"="bicycle_parking"](area) -> .all;
+  make counter num = 0 -> .count;
+  foreach.all {
+      .count convert counter num = t['num'] + 1 -> .count;
+  }
+  .count out;
+`;
+
+exports.PUBLIC_ROUTES_OSM = (osmID) => `
+  [out:json][timeout:60];
+  rel(${osmID});
+  map_to_area;
+  (
+    way["highway"~"footway|cycleway|path|track|bridleway"](area);
+  );
+  convert result ::=::,::geom=geom(),length=length();
+  out geom;
 `;
 
 exports.CITY_DATA = [

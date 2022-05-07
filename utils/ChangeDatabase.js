@@ -10,61 +10,58 @@ const CITY_DATA = require('../assets/json/uk-cities.json');
 
 const {
   aqi_levels,
-  GEOJSON_PRESET,
-  BUS_STOPS_OSM,
+  GEOJSON_PRESET
 } = require('../config');
 
 const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
     return new Promise((res, rej) => {
       setTimeout(async () => {
-        await PlaceFetch(place).then(async (placeData) => {
-          if(placeData !== undefined) {
-            readline.clearLine(process.stdout);
-            readline.cursorTo(process.stdout, 0);
-            process.stdout.write(`Progress: (${placesLength - i}/${placesLength}) ${place.name}`);
+        await PlaceFetch(place).then(async (place) => {
+          readline.clearLine(process.stdout);
+          readline.cursorTo(process.stdout, 0);
+          process.stdout.write(`Progress: (${placesLength - i}/${placesLength}) ${place.name}`);
 
-            place = { ...place, ...placeData };
-            if(!isUpdating) place.place_id = crypto.randomBytes(8).toString("hex");
-            place.air_quality_label = aqi_levels.find(x => x[0] > place.air_quality)[1];
-            place.population_density = CalculateData.populationDensity(place.population, place.area);
-            place.bus_stop_population_ratio = CalculateData.busStopPopulationRatio(place.bus_stop_quantity, place.population);
-            if(place.vehicle_quantity !== undefined && place.vehicle_quantity !== null) {
-              place.vehicle_population_ratio = CalculateData.vehiclePopulationRatio(place.vehicle_quantity, place.population);
-            } else {
-              place.vehicle_population_ratio = null;
-            }
+          if(!isUpdating) place.place_id = crypto.randomBytes(8).toString("hex");
+          place.place_type = 'CITY';
+          place.air_quality_label = aqi_levels.find(x => x[0] > place.air_quality)[1];
+          place.population_density = CalculateData.populationDensity(place.population, place.area);
+          place.bus_stop_population_ratio = CalculateData.busStopPopulationRatio(place.bus_stop_quantity, place.population);
+          if(place.vehicle_quantity !== null) place.vehicle_population_ratio = CalculateData.vehiclePopulationRatio(place.vehicle_quantity, place.population);
 
-            if(place.geometry !== undefined) {
-              let gj = GEOJSON_PRESET;
-              gj.features = [];
-              gj.features.push({ "type": "Feature", "properties": { "name": `${place.name}`, "id": `${place.place_id}`, "possibly_inaccurate": placeData.area_inaccurate }, "geometry": placeData.geometry });
-              place.boundary_id ??= crypto.randomBytes(16).toString("hex");
-              place.blob = await GitHubAPI.createBlob(gj).catch(err => rej(err));
-            }
+          if(place.geometry !== null) {
+            let gj = GEOJSON_PRESET;
+            gj.features = [];
+            gj.features.push({ "type": "Feature", "properties": { "name": `${place.name}`, "id": `${place.place_id}`, "possibly_inaccurate": place.area_inaccurate }, "geometry": place.geometry });
+            place.boundary_id ??= crypto.randomBytes(16).toString("hex");
+            place.blob = await GitHubAPI.createBlob(gj).catch(err => rej(err));
+          }
 
-            // console.log(place);
+          // console.log(place);
 
-            if(!isUpdating) {
-                res({
-                  statements: [
-                    ["INSERT INTO places (place_id, place_type, name, county, country, rating, last_updated) VALUES ($1, $2, $3, $4, $5, $6, $7)", [place.place_id, 'CITY', place.name, place.county, place.country, place.rating, ct]],
-                    ["INSERT INTO places_properties (place_id, wiki_item, osm_id, area, boundary_id, area_inaccurate, latitude, longitude, population, bus_stop_quantity, postcode_districts) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)", [place.place_id, place.wiki_item, place.osm_id, place.area, place.boundary_id, place.area_inaccurate, place.latitude, place.longitude, place.population, place.bus_stop_quantity, place.postcode_districts ]],
-                    ["INSERT INTO places_qualities (place_id, air_quality, air_quality_label, bus_stop_population_ratio, population_density) VALUES ($1, $2, $3, $4, $5)", [place.place_id, place.air_quality, place.air_quality_label, place.bus_stop_population_ratio, place.population_density ]]
+          if(!isUpdating) {
+              res({
+                statements: [
+                  ["INSERT INTO places (place_id, place_type, name, county, country, rating, last_updated) VALUES ($1, $2, $3, $4, $5, $6, $7)", [place.place_id, place.place_type, place.name, place.county, place.country, place.rating, place.last_updated]],
+                  [
+                    "INSERT INTO places_properties (place_id, wiki_item, osm_id, area, boundary_id, area_inaccurate, latitude, longitude, population, bus_stop_quantity, bicycle_parking_quantity, walking_routes_quantity, walking_routes_length, cycling_routes_quantity, cycling_routes_length, postcode_districts) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)",
+                    [place.place_id, place.wiki_item, place.osm_id, place.area, place.boundary_id, place.area_inaccurate, place.latitude, place.longitude, place.population, place.bus_stop_quantity, place.bicycle_parking_quantity, place.walking_routes_quantity, place.walking_routes_length, place.cycling_routes_quantity, place.cycling_routes_length, place.postcode_districts]
                   ],
-                  ...place
-                });
-            } else {
-                res({
-                  statements: [
-                    ["UPDATE places SET last_updated = $1, rating = $2 WHERE place_id = $3", [ct, place.rating, place.place_id]],
-                    ["UPDATE places_properties SET area = $1, latitude = $2, longitude = $3, population = $4, bus_stop_quantity = $5, postcode_districts = $6 WHERE place_id = $7", [place.area, place.latitude, place.longitude, place.population, place.bus_stop_quantity, place.postcode_districts, place.place_id]],
-                    ["UPDATE places_qualities SET air_quality = $1, air_quality_label = $2, bus_stop_population_ratio = $3, vehicle_population_ratio = $4, population_density = $5 WHERE place_id = $6", [place.air_quality, place.air_quality_label, place.bus_stop_population_ratio, place.vehicle_population_ratio, place.population_density, place.place_id]]
-                  ],
-                  ...place
-                });
-            }
+                  ["INSERT INTO places_qualities (place_id, air_quality, air_quality_label, bus_stop_population_ratio, population_density) VALUES ($1, $2, $3, $4, $5)", [place.place_id, place.air_quality, place.air_quality_label, place.bus_stop_population_ratio, place.population_density ]]
+                ],
+                ...place
+              });
           } else {
-            rej(city);
+              res({
+                statements: [
+                  ["UPDATE places SET last_updated = $1, rating = $2 WHERE place_id = $3", [place.last_updated, place.rating, place.place_id]],
+                  [
+                    "UPDATE places_properties SET area = $1, latitude = $2, longitude = $3, population = $4, bus_stop_quantity = $5, bicycle_parking_quantity = $6, walking_routes_quantity = $7, walking_routes_length = $8, cycling_routes_quantity = $9, cycling_routes_length = $10 postcode_districts = $11 WHERE place_id = $12",
+                    [place.area, place.latitude, place.longitude, place.population, place.bus_stop_quantity, place.bicycle_parking_quantity, place.walking_routes_quantity, place.walking_routes_length, place.cycling_routes_quantity, place.cycling_routes_length, place.postcode_districts, place.place_id]
+                  ],
+                  ["UPDATE places_qualities SET air_quality = $1, air_quality_label = $2, bus_stop_population_ratio = $3, vehicle_population_ratio = $4, population_density = $5 WHERE place_id = $6", [place.air_quality, place.air_quality_label, place.bus_stop_population_ratio, place.vehicle_population_ratio, place.population_density, place.place_id]]
+                ],
+                ...place
+              });
           }
         }).catch(err => {
           console.log('The current place was: ', place);
@@ -89,6 +86,7 @@ const setup = async (ct, places, isUpdating) => {
 
   return Promise.all(
     places.map(async (place, i) => {
+      place.last_updated = ct;
       let result = await fillStatement(ct, place, isUpdating, i, places.length);
       if(result.name !== 'London') {
         Object.keys(qualities_range).forEach((k, i) => {
@@ -113,9 +111,9 @@ const setup = async (ct, places, isUpdating) => {
 }
 
 const handleBoundaries = async (places) => {
-  if(places[0].blob == undefined) return;
+  if(places[0].blob == null) return;
   return new Promise(async (res, rej) => {
-    const reset = await GitHubAPI.ResetBranch('dev-file-storage', 'ce9a79458fa950dde6ef468486893a8ecb47e6e0').catch(err => rej(err));
+    const reset = await GitHubAPI.ResetBranch('ce9a79458fa950dde6ef468486893a8ecb47e6e0').catch(err => rej(err));
 
     let treeData = [];
     places.map(place => {
@@ -187,7 +185,8 @@ const ChangeDatabase = async () => {
     places = await closed.getAllPlaces();
   }
 
-  places = await setup(Date.now(), places, is_data);
+  let ct = parseInt((new Date().getTime() / 1000).toFixed(0));
+  places = await setup(ct, places, is_data);
   places = await workWithPlaces(places);
 
   places.map(place => place.statements.map(stmt => statements.push(stmt)));

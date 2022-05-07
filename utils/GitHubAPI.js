@@ -19,11 +19,11 @@ const getBranch = async (branch) => new Promise(async (res, rej) => await reposi
 
 const createTree = async (tree) => new Promise(async (res, rej) => await repository.createTree(tree).then(result => res(result.data)).catch(err => rej(err.data)));
 
-export const createBlob = async (data) => new Promise(async (res, rej) => await repository.createBlob(JSON.stringify(data)).then(result => res(result.data)).catch(err => rej(err.data)));
+const createBlob = async (data) => new Promise(async (res, rej) => await repository.createBlob(JSON.stringify(data)).then(result => res(result.data)).catch(err => rej(err.data)));
 
 const getContents = async (ref, path, raw) => new Promise(async (res, rej) => await repository.getContents(ref, path, raw).then(result => res(result.data)).catch(err => rej(err)));
 
-export const PushBoundary = async (treeData) => {
+const PushBoundary = async (treeData) => {
   return new Promise(async (res, rej) => {
     let tree = await createTree(treeData).catch(err => rej(err));
     let branch = await getBranch(GITHUB_BRANCH).catch(err => rej(err));
@@ -34,7 +34,7 @@ export const PushBoundary = async (treeData) => {
   });
 }
 
-export const GetBoundary = async (path, raw) => {
+const GetBoundary = async (path, raw) => {
   return new Promise(async (res, rej) => {
     let boundary = await getContents(GITHUB_BRANCH, path, raw).catch(err => rej(err));
 
@@ -42,7 +42,7 @@ export const GetBoundary = async (path, raw) => {
   });
 }
 
-export const ResetBranch = async (branchName, sha) => {
+const ResetBranch = async (sha) => {
   return new Promise(async (res, rej) => {
     let branch = await updateHead(GITHUB_BRANCH, sha, false).catch(err => rej(err));
 

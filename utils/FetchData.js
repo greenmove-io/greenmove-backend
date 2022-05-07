@@ -1,16 +1,21 @@
 const axios = require('axios');
 import { isObjectEmpty } from './functions';
 import BoundaryData from './BoundaryData';
+import { handlePublicRoutes } from './OSMData';
 
 const {
-  required_props,
+  default_required_props,
+  properties_required_props,
+  qualities_required_props,
   CITY_SPARQL,
   WIKIDATA_API_URL,
   AQICN_API_URL,
   AQICN_API_KEY,
   POSTCODESIO_API_URL,
   OVERPASS_API_URL,
-  BUS_STOPS_OSM
+  BUS_STOPS_OSM,
+  BICYCLE_PARKING_OSM,
+  PUBLIC_ROUTES_OSM
 } = require('../config');
 
 const airQuality = async (data) => {
@@ -73,6 +78,8 @@ export const overpassAPI = async (data) => {
 
 export const PlaceFetch = async (place) => {
   return new Promise(async (res, rej) => {
+    let required_props = [...default_required_props, ...properties_required_props, ...qualities_required_props];
+
     let wikiRequest = await wikidataRequest(CITY_SPARQL(place.name)).catch(err => rej(err));
     let wikiData = {};
     let i = 0;
@@ -96,17 +103,19 @@ export const PlaceFetch = async (place) => {
       }
     }
 
-    if(place.last_updated == undefined) {
-      place.last_updated = new Date();
-      place.last_updated.setMinutes(place.last_updated.getMinutes() - (60 * 180));
+    if(place.boundary_last_updated == undefined) {
+      place.boundary_last_updated = new Date(place.last_updated);
+      place.boundary_last_updated.setMinutes(place.boundary_last_updated.getMinutes() - (60 * 180));
     }
 
-    if(place.last_updated !== undefined) {
-      let nu = new Date(place.last_updated);
+    if(place.boundary_last_updated !== undefined) {
+      let nu = new Date(place.boundary_last_updated);
       nu.setMinutes(nu.getMinutes() + (60 * 168));
       let ct = new Date();
 
       if(nu <= ct) {
+        place.boundary_last_updated = place.last_updated;
+
         const bd = await BoundaryData(place.name).catch(err => rej(err));
         place.osm_id = bd['osm_id'];
         place.area = bd['area'];
@@ -115,6 +124,13 @@ export const PlaceFetch = async (place) => {
 
         let busStopsCount = await overpassAPI(BUS_STOPS_OSM(place.osm_id)).catch(err => rej(err));
         place.bus_stop_quantity = Number(busStopsCount.elements[0].tags.num);
+
+        let bicycleParkingCount = await overpassAPI(BICYCLE_PARKING_OSM(place.osm_id)).catch(err => rej(err));
+        place.bicycle_parking_quantity = Number(bicycleParkingCount.elements[0].tags.num);
+
+        let publicRoutes = await overpassAPI(PUBLIC_ROUTES_OSM(place.osm_id)).catch(err => rej(err));
+        let calculatedRoutes = await handlePublicRoutes(publicRoutes.elements).catch(err => rej(err));
+        place = {...place, ...calculatedRoutes};
       }
     }
 
@@ -137,14 +153,16 @@ export const PlaceFetch = async (place) => {
     let pc = await postcodeDistricts(wikiData).catch(err => rej(err));
     let postcodes = pc.map(x => x.outcode);
 
-    let data = {...wikiData, air_quality: aqi, postcode_districts: postcodes, bus_stop_quantity: place.bus_stop_quantity, osm_id: place.osm_id, geometry: place.geometry, area: place.area, area_inaccurate: place.area_inaccurate};
-    let returnData = {};
+    let data = {
+      ...wikiData,
+      air_quality: aqi,
+      postcode_districts: postcodes,
+    };
+    place = { ...place, ...data };
     for(let prop of required_props) {
-      if(data[prop] !== undefined) {
-        returnData[prop] = data[prop];
-      }
+      if(place[prop] == undefined) place[prop] = null;
     }
 
-    return res(returnData);
+    return res(place);
   });
 }
