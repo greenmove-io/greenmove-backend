@@ -46,6 +46,8 @@ CREATE TABLE places_qualities (
   vehicle_population_ratio NUMERIC(8, 2),
   bus_stop_population_ratio NUMERIC(8, 2),
   bicycle_parking_population_ratio NUMERIC(8, 2),
+  walking_routes_ratio NUMERIC(8, 2),
+  cycling_routes_ratio NUMERIC(8, 2),
   population_density INTEGER,
   CONSTRAINT fk_place FOREIGN KEY(place_id) REFERENCES places(place_id)
 )

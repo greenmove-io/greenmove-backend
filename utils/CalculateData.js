@@ -19,8 +19,16 @@ const busStopPopulationRatio = (busStopCount, population) => {
   return Math.round(((population / busStopCount) + Number.EPSILON) * 100) / 100;
 }
 
+const bicycleParkingPopulationRatio = (bicycleParkingCount, population) => {
+  return Math.round(((population / bicycleParkingCount) + Number.EPSILON) * 100) / 100;
+}
+
+const routeRatio = (routeLength, area) => {
+  return Math.round(routeLength / (area / 1000000));
+}
+
 const rangePercentage = (min, max, value) => {
   return ((value - min) * 100) / (max - min);
 }
 
-export default { AQIPercentage, populationDensity, PDPercentage, busStopPopulationRatio, vehiclePopulationRatio, rangePercentage };
+export default { AQIPercentage, populationDensity, PDPercentage, busStopPopulationRatio, vehiclePopulationRatio, bicycleParkingPopulationRatio, routeRatio, rangePercentage };

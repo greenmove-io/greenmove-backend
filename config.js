@@ -148,11 +148,6 @@ exports.CITY_DATA = [
     "county": "Somerset"
   },
   {
-    "name": "Belfast",
-    "country": "Northern Ireland",
-    "county": "Antrim"
-  },
-  {
     "name": "Birmingham",
     "country": "England",
     "county": "West Midlands"
