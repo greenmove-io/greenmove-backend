@@ -10,6 +10,8 @@ const CITY_DATA = require('../assets/json/uk-cities.json');
 
 const {
   aqi_levels,
+  qualities_ranges,
+  interquartiles,
   GEOJSON_PRESET
 } = require('../config');
 
@@ -58,11 +60,11 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
                 statements: [
                   ["UPDATE places SET last_updated = $1, rating = $2 WHERE place_id = $3", [place.last_updated, place.rating, place.place_id]],
                   [
-                    "UPDATE places_properties SET area = $1, latitude = $2, longitude = $3, population = $4, bus_stop_quantity = $5, bicycle_parking_quantity = $6, walking_routes_quantity = $7, walking_routes_length = $8, cycling_routes_quantity = $9, cycling_routes_length = $10 postcode_districts = $11 WHERE place_id = $12",
+                    "UPDATE places_properties SET area = $1, latitude = $2, longitude = $3, population = $4, bus_stop_quantity = $5, bicycle_parking_quantity = $6, walking_routes_quantity = $7, walking_routes_length = $8, cycling_routes_quantity = $9, cycling_routes_length = $10, postcode_districts = $11 WHERE place_id = $12",
                     [place.area, place.latitude, place.longitude, place.population, place.bus_stop_quantity, place.bicycle_parking_quantity, place.walking_routes_quantity, place.walking_routes_length, place.cycling_routes_quantity, place.cycling_routes_length, place.postcode_districts, place.place_id]
                   ],
                   [
-                    "UPDATE places_qualities SET air_quality = $1, air_quality_label = $2, bus_stop_population_ratio = $3, vehicle_population_ratio = $4, bicycle_parking_population_ratio = $5, walking_routes_ratio = $6, cycling_routes_ratio = $7, population_density = $5 WHERE place_id = $8",
+                    "UPDATE places_qualities SET air_quality = $1, air_quality_label = $2, bus_stop_population_ratio = $3, vehicle_population_ratio = $4, bicycle_parking_population_ratio = $5, walking_routes_ratio = $6, cycling_routes_ratio = $7, population_density = $8 WHERE place_id = $9",
                     [place.air_quality, place.air_quality_label, place.bus_stop_population_ratio, place.vehicle_population_ratio, place.bicycle_parking_population_ratio, place.walking_routes_ratio, place.cycling_routes_ratio, place.population_density, place.place_id]
                   ]
                 ],
@@ -79,43 +81,29 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
 }
 
 const setup = async (ct, places, isUpdating) => {
-  let qualities_range = {
-    min_air_quality: 500,
-    max_air_quality: 0,
-    min_population_density: 99999,
-    max_population_density: 0,
-    min_vehicle_population_ratio: 999,
-    max_vehicle_population_ratio: 0,
-    min_bus_stop_population_ratio: 9999,
-    max_bus_stop_population_ratio: 0,
-    min_bicycle_parking_population_ratio: 99999,
-    max_bicycle_parking_population_ratio: 0,
-    min_walking_routes_ratio: 99999,
-    max_walking_routes_ratio: 0,
-    min_cycling_routes_ratio: 99999,
-    max_cycling_routes_ratio: 0
-  }
-
   return Promise.all(
     places.map(async (place, i) => {
       place.last_updated = ct;
       let result = await fillStatement(ct, place, isUpdating, i, places.length);
-      if(result.name !== 'London') {
-        Object.keys(qualities_range).forEach((k, i) => {
-          let key = k.slice(4);
-          if(i % 2 == 0) {
-            if(result[key] < qualities_range[k]) qualities_range[k] = result[key];
-          } else {
-            if(result[key] > qualities_range[k]) qualities_range[k] = result[key];
-          }
-        });
-      }
+      // Object.keys(qualities_ranges).forEach((k, i) => {
+      //   let key = k.slice(4);
+      //   if(i % 2 == 0) {
+      //     if(result[key] < qualities_ranges[k]) qualities_ranges[k] = result[key];
+      //   } else {
+      //     if(result[key] > qualities_ranges[k]) qualities_ranges[k] = result[key];
+      //   }
+      // });
 
       return result;
     })
   ).then((data) => {
-    data.qualities_range = qualities_range;
-    return data;
+    for(let key in interquartiles) {
+      interquartiles[key].arr = data.map(a => a[key]);
+      let iqrs = CalculateData.IQR(interquartiles[key].arr);
+      interquartiles[key] = { ...iqrs };
+    }
+
+    return { data, qualities_ranges, interquartiles };
   })
   .catch(err => {
     console.log('There was an error with a place: ', err);
@@ -123,12 +111,12 @@ const setup = async (ct, places, isUpdating) => {
 }
 
 const handleBoundaries = async (places) => {
-  if(places[0].blob == null) return;
+  if(places.data[0].blob == null) return;
   return new Promise(async (res, rej) => {
     const reset = await GitHubAPI.ResetBranch('ce9a79458fa950dde6ef468486893a8ecb47e6e0').catch(err => rej(err));
 
     let treeData = [];
-    places.map(place => {
+    places.data.map(place => {
       treeData.push({
         path: `places/boundaries/cities/${place.boundary_id}.json`,
         mode: "100644",
@@ -148,24 +136,73 @@ const handleRating = async (places) => {
   return new Promise(async (res, rej) => {
 
     // https://stackoverflow.com/questions/25835591/how-to-calculate-percentage-between-the-range-of-two-values-a-third-value-is
-    places = places.map(place => {
-      let AQIPercentage = 100 - CalculateData.rangePercentage(places.qualities_range.min_air_quality, places.qualities_range.max_air_quality, place.air_quality);
-      let PDPercentage = 100 - CalculateData.rangePercentage(places.qualities_range.min_population_density, places.qualities_range.max_population_density, place.population_density);
-      let BSRPercentage = 100 - CalculateData.rangePercentage(places.qualities_range.min_bus_stop_population_ratio, places.qualities_range.max_bus_stop_population_ratio, place.bus_stop_population_ratio);
-      let VRPercentage = 100;
-      if(place.vehicle_population_ratio !== null) {
-         VRPercentage = 100 - CalculateData.rangePercentage(places.qualities_range.min_vehicle_population_ratio, places.qualities_range.max_vehicle_population_ratio, place.vehicle_population_ratio);
+    places = places.data.map(place => {
+      let AQIPercentage, PDPercentage,
+          BSRPercentage, VRPercentage,
+          BPRPercentage, WRRPercentage,
+          CRRPercentage;
+
+      if(place.air_quality >= places.interquartiles.air_quality.Q1 && place.air_quality <= places.interquartiles.air_quality.Q3) {
+        AQIPercentage = 100 - CalculateData.rangePercentage(places.interquartiles.air_quality.Q1, places.interquartiles.air_quality.Q3, place.air_quality);
+      } else if (place.air_quality < places.interquartiles.air_quality.Q1) {
+        AQIPercentage = 100;
+      } else if (place.air_quality > places.interquartiles.air_quality.Q3) {
+        AQIPercentage = 25;
       }
-      let BPRPercentage = 100 - CalculateData.rangePercentage(places.qualities_range.min_bicycle_parking_population_ratio, places.qualities_range.max_bicycle_parking_population_ratio, place.bicycle_parking_population_ratio);
-      let WRRPercentage = CalculateData.rangePercentage(places.qualities_range.min_walking_routes_ratio, places.qualities_range.max_walking_routes_ratio, place.walking_routes_ratio);
-      let CRRPercentage = CalculateData.rangePercentage(places.qualities_range.min_cycling_routes_ratio, places.qualities_range.max_cycling_routes_ratio, place.cycling_routes_ratio);
+
+      if(place.population_density >= places.interquartiles.population_density.Q1 && place.population_density <= places.interquartiles.population_density.Q3) {
+        PDPercentage = 100 - CalculateData.rangePercentage(places.interquartiles.population_density.Q1, places.interquartiles.population_density.Q3, place.population_density);
+      } else if (place.population_density < places.interquartiles.population_density.Q1) {
+        PDPercentage = 100;
+      } else if (place.population_density > places.interquartiles.population_density.Q3) {
+        PDPercentage = 25;
+      }
+
+      if(place.bus_stop_population_ratio >= places.interquartiles.bus_stop_population_ratio.Q1 && place.bus_stop_population_ratio <= places.interquartiles.bus_stop_population_ratio.Q3) {
+        BSRPercentage = 100 - CalculateData.rangePercentage(places.interquartiles.bus_stop_population_ratio.Q1, places.interquartiles.bus_stop_population_ratio.Q3, place.bus_stop_population_ratio);
+      } else if (place.bus_stop_population_ratio < places.interquartiles.bus_stop_population_ratio.Q1) {
+        BSRPercentage = 100;
+      } else if (place.bus_stop_population_ratio > places.interquartiles.bus_stop_population_ratio.Q3) {
+        BSRPercentage = 25;
+      }
+
+      VRPercentage = 100;
+      if(place.vehicle_population_ratio !== null) {
+        if(place.vehicle_population_ratio >= places.interquartiles.vehicle_population_ratio.Q1 && place.vehicle_population_ratio <= places.interquartiles.vehicle_population_ratio.Q3) {
+          VRPercentage = 100 - CalculateData.rangePercentage(places.interquartiles.vehicle_population_ratio.Q1, places.interquartiles.vehicle_population_ratio.Q3, place.vehicle_population_ratio);
+        } else if (place.vehicle_population_ratio < places.interquartiles.vehicle_population_ratio.Q1) {
+          VRPercentage = 100;
+        } else if (place.vehicle_population_ratio > places.interquartiles.vehicle_population_ratio.Q3) {
+          VRPercentage = 25;
+        }
+      }
+
+      if(place.bicycle_parking_population_ratio >= places.interquartiles.bicycle_parking_population_ratio.Q1 && place.bicycle_parking_population_ratio <= places.interquartiles.bicycle_parking_population_ratio.Q3) {
+        BPRPercentage = 100 - CalculateData.rangePercentage(places.interquartiles.bicycle_parking_population_ratio.Q1, places.interquartiles.bicycle_parking_population_ratio.Q3, place.bicycle_parking_population_ratio);
+      } else if (place.bicycle_parking_population_ratio < places.interquartiles.bicycle_parking_population_ratio.Q1) {
+        BPRPercentage = 100;
+      } else if (place.bicycle_parking_population_ratio > places.interquartiles.bicycle_parking_population_ratio.Q3) {
+        BPRPercentage = 25;
+      }
+
+      if(place.walking_routes_ratio >= places.interquartiles.walking_routes_ratio.Q1 && place.walking_routes_ratio <= places.interquartiles.walking_routes_ratio.Q3) {
+        WRRPercentage = CalculateData.rangePercentage(places.interquartiles.walking_routes_ratio.Q1, places.interquartiles.walking_routes_ratio.Q3, place.walking_routes_ratio);
+      } else if (place.walking_routes_ratio < places.interquartiles.walking_routes_ratio.Q1) {
+        WRRPercentage = 25;
+      } else if (place.walking_routes_ratio > places.interquartiles.walking_routes_ratio.Q3) {
+        WRRPercentage = 100;
+      }
+
+      if(place.cycling_routes_ratio >= places.interquartiles.cycling_routes_ratio.Q1 && place.cycling_routes_ratio <= places.interquartiles.cycling_routes_ratio.Q3) {
+        CRRPercentage = CalculateData.rangePercentage(places.interquartiles.cycling_routes_ratio.Q1, places.interquartiles.cycling_routes_ratio.Q3, place.cycling_routes_ratio);
+      } else if (place.cycling_routes_ratio < places.interquartiles.cycling_routes_ratio.Q1) {
+        CRRPercentage = 25;
+      } else if (place.cycling_routes_ratio > places.interquartiles.cycling_routes_ratio.Q3) {
+        CRRPercentage = 100;
+      }
 
       let totalPercentage;
-      if(place.name == 'London') {
-        totalPercentage = ((AQIPercentage + PDPercentage) / 200) * 100;
-      } else {
-        totalPercentage = ((AQIPercentage + PDPercentage + BSRPercentage + VRPercentage + BPRPercentage + WRRPercentage + CRRPercentage) / 700) * 100;
-      }
+      totalPercentage = ((AQIPercentage + PDPercentage + BSRPercentage + VRPercentage + BPRPercentage + WRRPercentage + CRRPercentage) / 700) * 100;
 
       place.rating = Math.round(((totalPercentage / 20) + Number.EPSILON) * 100) / 100;
       place.statements.push(["UPDATE places SET rating = $1 WHERE place_id = $2", [place.rating, place.place_id]]);

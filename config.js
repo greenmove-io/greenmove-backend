@@ -52,8 +52,79 @@ exports.qualities_required_props = [
   'bus_stop_population_ratio',
   'vehicle_population_ratio',
   'bicycle_parking_population_ratio',
-  'population_density'
+  'population_density',
+  'walking_routes_ratio',
+  'cycling_routes_ratio'
 ];
+
+exports.qualities_ranges = {
+  min_air_quality: 500,
+  max_air_quality: 0,
+  min_population_density: 99999,
+  max_population_density: 0,
+  min_vehicle_population_ratio: 999,
+  max_vehicle_population_ratio: 0,
+  min_bus_stop_population_ratio: 9999,
+  max_bus_stop_population_ratio: 0,
+  min_bicycle_parking_population_ratio: 99999,
+  max_bicycle_parking_population_ratio: 0,
+  min_walking_routes_ratio: 99999,
+  max_walking_routes_ratio: 0,
+  min_cycling_routes_ratio: 99999,
+  max_cycling_routes_ratio: 0
+};
+
+exports.interquartiles = {
+  air_quality: {
+    arr: [],
+    STD: 0,
+    Q1: 0,
+    Q2: 0,
+    Q3: 0
+  },
+  population_density: {
+    arr: [],
+    STD: 0,
+    Q1: 0,
+    Q2: 0,
+    Q3: 0
+  },
+  vehicle_population_ratio: {
+    arr: [],
+    STD: 0,
+    Q1: 0,
+    Q2: 0,
+    Q3: 0
+  },
+  bus_stop_population_ratio: {
+    arr: [],
+    STD: 0,
+    Q1: 0,
+    Q2: 0,
+    Q3: 0
+  },
+  bicycle_parking_population_ratio: {
+    arr: [],
+    STD: 0,
+    Q1: 0,
+    Q2: 0,
+    Q3: 0
+  },
+  walking_routes_ratio: {
+    arr: [],
+    STD: 0,
+    Q1: 0,
+    Q2: 0,
+    Q3: 0
+  },
+  cycling_routes_ratio: {
+    arr: [],
+    STD: 0,
+    Q1: 0,
+    Q2: 0,
+    Q3: 0
+  }
+};
 
 exports.aqi_levels = [
   [0, 'Good'],
