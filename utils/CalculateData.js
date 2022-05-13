@@ -11,6 +11,14 @@ const PDPercentage = (populationDensity, maxPopulation) => {
   return 100 - ((populationDensity / maxPopulation) * 100);
 }
 
+const parkAreaRatio = (parkCount, area) => {
+  return Math.round(((parkCount / (area / 1000000)) + Number.EPSILON) * 100) / 100;
+}
+
+const parkPopulationRatio = (parkCount, population) => {
+  return Math.round(((population / parkCount) + Number.EPSILON) * 100) / 100;
+}
+
 const vehiclePopulationRatio = (vehicleCount, population) => {
   return Math.round(((population / vehicleCount) + Number.EPSILON) * 100) / 100;
 }
@@ -57,8 +65,8 @@ const IQR = (arr) => {
 const rangePercentage = (min, max, value) => {
   let p = ((value - min) * 100) / (max - min);
   if(p < 25) p = 25;
-  
+
   return p;
 }
 
-export default { AQIPercentage, populationDensity, PDPercentage, busStopPopulationRatio, vehiclePopulationRatio, bicycleParkingPopulationRatio, routeRatio, IQR, rangePercentage };
+export default { AQIPercentage, populationDensity, PDPercentage, parkAreaRatio, parkPopulationRatio, busStopPopulationRatio, vehiclePopulationRatio, bicycleParkingPopulationRatio, routeRatio, IQR, rangePercentage };

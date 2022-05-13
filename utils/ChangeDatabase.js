@@ -27,6 +27,8 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
           place.place_type = 'CITY';
           place.air_quality_label = aqi_levels.find(x => x[0] > place.air_quality)[1];
           place.population_density = CalculateData.populationDensity(place.population, place.area);
+          place.park_area_ratio = CalculateData.parkAreaRatio(place.park_quantity, place.area);
+          place.park_population_ratio = CalculateData.parkPopulationRatio(place.park_quantity, place.population);
           place.bus_stop_population_ratio = CalculateData.busStopPopulationRatio(place.bus_stop_quantity, place.population);
           if(place.vehicle_quantity !== null) place.vehicle_population_ratio = CalculateData.vehiclePopulationRatio(place.vehicle_quantity, place.population);
           place.bicycle_parking_population_ratio = CalculateData.bicycleParkingPopulationRatio(place.bicycle_parking_quantity, place.population);
@@ -48,10 +50,13 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
                 statements: [
                   ["INSERT INTO places (place_id, place_type, name, county, country, rating, last_updated) VALUES ($1, $2, $3, $4, $5, $6, $7)", [place.place_id, place.place_type, place.name, place.county, place.country, place.rating, place.last_updated]],
                   [
-                    "INSERT INTO places_properties (place_id, wiki_item, osm_id, area, boundary_id, area_inaccurate, latitude, longitude, population, bus_stop_quantity, bicycle_parking_quantity, walking_routes_quantity, walking_routes_length, cycling_routes_quantity, cycling_routes_length, postcode_districts) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)",
-                    [place.place_id, place.wiki_item, place.osm_id, place.area, place.boundary_id, place.area_inaccurate, place.latitude, place.longitude, place.population, place.bus_stop_quantity, place.bicycle_parking_quantity, place.walking_routes_quantity, place.walking_routes_length, place.cycling_routes_quantity, place.cycling_routes_length, place.postcode_districts]
+                    "INSERT INTO places_properties (place_id, wiki_item, osm_id, area, boundary_id, area_inaccurate, latitude, longitude, population, greenspace_area, park_quantity, bus_stop_quantity, bicycle_parking_quantity, walking_routes_quantity, walking_routes_length, cycling_routes_quantity, cycling_routes_length, postcode_districts) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)",
+                    [place.place_id, place.wiki_item, place.osm_id, place.area, place.boundary_id, place.area_inaccurate, place.latitude, place.longitude, place.population, place.greenspace_area, place.park_quantity, place.bus_stop_quantity, place.bicycle_parking_quantity, place.walking_routes_quantity, place.walking_routes_length, place.cycling_routes_quantity, place.cycling_routes_length, place.postcode_districts]
                   ],
-                  ["INSERT INTO places_qualities (place_id, air_quality, air_quality_label, bus_stop_population_ratio, bicycle_parking_population_ratio, walking_routes_ratio, cycling_routes_ratio, population_density) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)", [place.place_id, place.air_quality, place.air_quality_label, place.bus_stop_population_ratio, place.bicycle_parking_population_ratio, place.walking_routes_ratio, place.cycling_routes_ratio, place.population_density ]]
+                  [
+                    "INSERT INTO places_qualities (place_id, air_quality, air_quality_label, park_area_ratio, park_population_ratio, bus_stop_population_ratio, bicycle_parking_population_ratio, walking_routes_ratio, cycling_routes_ratio, population_density) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+                    [place.place_id, place.air_quality, place.air_quality_label, place.park_area_ratio, place.park_population_ratio, place.bus_stop_population_ratio, place.bicycle_parking_population_ratio, place.walking_routes_ratio, place.cycling_routes_ratio, place.population_density ]
+                  ]
                 ],
                 ...place
               });
@@ -60,12 +65,12 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
                 statements: [
                   ["UPDATE places SET last_updated = $1, rating = $2 WHERE place_id = $3", [place.last_updated, place.rating, place.place_id]],
                   [
-                    "UPDATE places_properties SET area = $1, latitude = $2, longitude = $3, population = $4, bus_stop_quantity = $5, bicycle_parking_quantity = $6, walking_routes_quantity = $7, walking_routes_length = $8, cycling_routes_quantity = $9, cycling_routes_length = $10, postcode_districts = $11 WHERE place_id = $12",
-                    [place.area, place.latitude, place.longitude, place.population, place.bus_stop_quantity, place.bicycle_parking_quantity, place.walking_routes_quantity, place.walking_routes_length, place.cycling_routes_quantity, place.cycling_routes_length, place.postcode_districts, place.place_id]
+                    "UPDATE places_properties SET area = $1, latitude = $2, longitude = $3, population = $4, greenspace_area = $5, park_quantity = $6, bus_stop_quantity = $7, bicycle_parking_quantity = $8, walking_routes_quantity = $9, walking_routes_length = $10, cycling_routes_quantity = $11, cycling_routes_length = $12, postcode_districts = $13 WHERE place_id = $14",
+                    [place.area, place.latitude, place.longitude, place.population, place.greenspace_area, place.park_quantity, place.bus_stop_quantity, place.bicycle_parking_quantity, place.walking_routes_quantity, place.walking_routes_length, place.cycling_routes_quantity, place.cycling_routes_length, place.postcode_districts, place.place_id]
                   ],
                   [
-                    "UPDATE places_qualities SET air_quality = $1, air_quality_label = $2, bus_stop_population_ratio = $3, vehicle_population_ratio = $4, bicycle_parking_population_ratio = $5, walking_routes_ratio = $6, cycling_routes_ratio = $7, population_density = $8 WHERE place_id = $9",
-                    [place.air_quality, place.air_quality_label, place.bus_stop_population_ratio, place.vehicle_population_ratio, place.bicycle_parking_population_ratio, place.walking_routes_ratio, place.cycling_routes_ratio, place.population_density, place.place_id]
+                    "UPDATE places_qualities SET air_quality = $1, air_quality_label = $2, park_area_ratio = $3, park_population_ratio = $4, bus_stop_population_ratio = $5, vehicle_population_ratio = $6, bicycle_parking_population_ratio = $7, walking_routes_ratio = $6, cycling_routes_ratio = $8, population_density = $9 WHERE place_id = $10",
+                    [place.air_quality, place.air_quality_label, place.park_area_ratio, place.park_population_ratio, place.bus_stop_population_ratio, place.vehicle_population_ratio, place.bicycle_parking_population_ratio, place.walking_routes_ratio, place.cycling_routes_ratio, place.population_density, place.place_id]
                   ]
                 ],
                 ...place

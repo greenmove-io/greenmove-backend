@@ -1,6 +1,6 @@
 const axios = require('axios');
 import { isObjectEmpty } from './functions';
-import BoundaryData from './BoundaryData';
+import BoundaryData, { handleGreenspacePolygons } from './BoundaryData';
 import { handlePublicRoutes } from './OSMData';
 
 const {
@@ -13,6 +13,7 @@ const {
   AQICN_API_KEY,
   POSTCODESIO_API_URL,
   OVERPASS_API_URL,
+  GREENSPACE_OSM,
   BUS_STOPS_OSM,
   BICYCLE_PARKING_OSM,
   PUBLIC_ROUTES_OSM
@@ -103,6 +104,15 @@ export const PlaceFetch = async (place) => {
       }
     }
 
+    if(wikiData.item) place.wiki_item = wikiData.item.split('/')[4];
+    if(wikiData.population !== undefined) place.population = Number(wikiData.population);
+    if(wikiData.latitude !== undefined && wikiData.longitude !== undefined) {
+      place.latitude = Number(wikiData.latitude);
+      place.longitude = Number(wikiData.longitude);
+    }
+
+    if(wikiData.area !== undefined) place.area = Number(wikiData.area);
+
     if(place.boundary_last_updated == undefined) {
       place.boundary_last_updated = new Date(place.last_updated);
       place.boundary_last_updated.setMinutes(place.boundary_last_updated.getMinutes() - (60 * 180));
@@ -118,9 +128,14 @@ export const PlaceFetch = async (place) => {
 
         const bd = await BoundaryData(place.name).catch(err => rej(err));
         place.osm_id = bd['osm_id'];
-        place.area = bd['area'];
+        if(place.area == undefined) place.area = bd['area'];
         place.geometry = bd['geometry'];
         place.area_inaccurate = bd['area_inaccurate'];
+
+        let greenspacePolygons = await overpassAPI(GREENSPACE_OSM(place.osm_id));
+        let { greenspace_area, park_quantity } = await handleGreenspacePolygons(greenspacePolygons.elements);
+        place.greenspace_area = Math.round(greenspace_area);
+        place.park_quantity = park_quantity;
 
         let busStopsCount = await overpassAPI(BUS_STOPS_OSM(place.osm_id)).catch(err => rej(err));
         place.bus_stop_quantity = Number(busStopsCount.elements[0].tags.num);
@@ -134,27 +149,11 @@ export const PlaceFetch = async (place) => {
       }
     }
 
-
-    if(wikiData.item) wikiData.wiki_item = wikiData.item.split('/')[4];
-
-    if(wikiData.area == undefined && place.area !== undefined) {
-      wikiData.area = place.area;
-    } else {
-      wikiData.area = Number(wikiData.area);
-    }
-
-    if(wikiData.population !== undefined) wikiData.population = Number(wikiData.population);
-    if(wikiData.latitude !== undefined && wikiData.longitude !== undefined) {
-      wikiData.latitude = Number(wikiData.latitude);
-      wikiData.longitude = Number(wikiData.longitude);
-    }
-
     let aqi = await airQuality(wikiData).catch(err => rej(err));
     let pc = await postcodeDistricts(wikiData).catch(err => rej(err));
     let postcodes = pc.map(x => x.outcode);
 
     let data = {
-      ...wikiData,
       air_quality: aqi,
       postcode_districts: postcodes,
     };

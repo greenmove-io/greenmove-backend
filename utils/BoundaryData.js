@@ -45,6 +45,33 @@ export const detailsBoundaryData = async (osmtype, osmid, category, pg) => {
   });
 }
 
+export const handleGreenspacePolygons = async (polygons) => {
+  return new Promise(async (res, rej) => {
+    let totalArea = 0;
+    let parkCount = 0;
+
+    polygons.map(p => {
+      if(p.geometry.length > 4) {
+        let geo = p['geometry'].map(x => [x.lat, x.lon]);
+        if(geo[0][0] !== geo[geo.length - 1][0] && geo[0][1] !== geo[geo.length - 1][1]) {
+          let c = geo[0];
+          geo.push(c)
+        }
+        console.log(geo);
+        let polygon = helpers.polygon([ geo ]);
+        let a = turf.default(polygon);
+
+        totalArea += a;
+      }
+      if(p.tags.leisure !== undefined) {
+        if(p.tags.leisure == 'park') parkCount++;
+      }
+    });
+
+    res({ greenspace_area: totalArea, park_quantity: parkCount });
+  });
+}
+
 const BoundaryData = async (city) => {
   let data = await searchBoundaryData(city);
   let selectedIndex = 0;

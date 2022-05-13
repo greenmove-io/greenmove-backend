@@ -36,6 +36,8 @@ exports.properties_required_props = [
   'latitude',
   'longitude',
   'population',
+  'park_quantity',
+  'greenspace_area',
   'bus_stop_quantity',
   'vehicle_quantity',
   'bicycle_parking_quantity',
@@ -49,6 +51,9 @@ exports.properties_required_props = [
 exports.qualities_required_props = [
   'air_quality',
   'air_quality_label',
+  'greenspace',
+  'park_area_ratio',
+  'park_population_ratio',
   'bus_stop_population_ratio',
   'vehicle_population_ratio',
   'bicycle_parking_population_ratio',
@@ -165,6 +170,18 @@ exports.CITY_SPARQL = (city) => `
       FILTER (lang(?name) = "en")
 
   } LIMIT 10
+`;
+
+exports.GREENSPACE_OSM = (osmID) => `
+  [out:json][timeout:240];
+    rel(${osmID});
+    map_to_area->.myarea;
+    (
+      way["landuse"~"grass|forest|meadow|recreation_ground|village_green|allotments|orchard|vineyard|cemetery|greenfield|farmland"](area.myarea);
+      way["natural"~"wood|grassland|tree|tree_row|heath|moor|scrub"](area.myarea);
+      way["leisure"~"park|pitch|dog_park|golf_course|garden|recreation_ground"](area.myarea);
+    );
+  out geom;
 `;
 
 exports.BUS_STOPS_OSM = (osmID) => `
