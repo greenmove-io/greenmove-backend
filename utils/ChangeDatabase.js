@@ -164,7 +164,6 @@ const workWithPlaces = async (places) => {
 }
 
 const ChangeDatabase = async () => {
-  return;
   let data = await closed.checkPlacesData();
   const { is_data } = data;
   let places = CITY_DATA;
