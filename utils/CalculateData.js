@@ -3,37 +3,13 @@ const AQIPercentage = (aqi, maxAQI) => {
    return 100 - ((aqi / 500) * 100);
 }
 
-const populationDensity = (pop, area) => {
-  return Math.round(pop / (area / 1000000));
-}
-
 const PDPercentage = (populationDensity, maxPopulation) => {
   return 100 - ((populationDensity / maxPopulation) * 100);
 }
 
-const parkAreaRatio = (parkCount, area) => {
-  return Math.round(((parkCount / (area / 1000000)) + Number.EPSILON) * 100) / 100;
-}
+const ratio = (v1, v2) => Math.round(v1 / v2);
 
-const parkPopulationRatio = (parkCount, population) => {
-  return Math.round(((population / parkCount) + Number.EPSILON) * 100) / 100;
-}
-
-const vehiclePopulationRatio = (vehicleCount, population) => {
-  return Math.round(((population / vehicleCount) + Number.EPSILON) * 100) / 100;
-}
-
-const busStopPopulationRatio = (busStopCount, population) => {
-  return Math.round(((population / busStopCount) + Number.EPSILON) * 100) / 100;
-}
-
-const bicycleParkingPopulationRatio = (bicycleParkingCount, population) => {
-  return Math.round(((population / bicycleParkingCount) + Number.EPSILON) * 100) / 100;
-}
-
-const routeRatio = (routeLength, area) => {
-  return Math.round(routeLength / (area / 1000000));
-}
+const ratioTwoDecimal = (v1, v2) => Math.round(((v1 / v2) + Number.EPSILON) * 100) / 100;
 
 // https://stackoverflow.com/questions/48719873/how-to-get-median-and-quartiles-percentiles-of-an-array-in-javascript-or-php
 const std = (arr) => {
@@ -69,4 +45,4 @@ const rangePercentage = (min, max, value) => {
   return p;
 }
 
-export default { AQIPercentage, populationDensity, PDPercentage, parkAreaRatio, parkPopulationRatio, busStopPopulationRatio, vehiclePopulationRatio, bicycleParkingPopulationRatio, routeRatio, IQR, rangePercentage };
+export default { AQIPercentage, PDPercentage, ratio, ratioTwoDecimal, IQR, rangePercentage };

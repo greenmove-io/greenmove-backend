@@ -1,6 +1,6 @@
 const axios = require('axios');
-const helpers = require('@turf/helpers');
-const turf = require('@turf/area');
+const turfHelpers = require('@turf/helpers');
+const turfArea = require('@turf/area');
 
 const {
   NOMINATIM_API_URL
@@ -48,27 +48,35 @@ export const detailsBoundaryData = async (osmtype, osmid, category, pg) => {
 export const handleGreenspacePolygons = async (polygons) => {
   return new Promise(async (res, rej) => {
     let totalArea = 0;
+    let parkTotalArea = 0;
+    let parkAvg = 0;
     let parkCount = 0;
 
     polygons.map(p => {
       if(p.geometry.length > 4) {
-        let geo = p['geometry'].map(x => [x.lat, x.lon]);
+        let geo = p['geometry'].map(obj => [obj.lat, obj.lon]);
         if(geo[0][0] !== geo[geo.length - 1][0] && geo[0][1] !== geo[geo.length - 1][1]) {
           let c = geo[0];
           geo.push(c)
         }
-        console.log(geo);
-        let polygon = helpers.polygon([ geo ]);
-        let a = turf.default(polygon);
 
+        let polygon = turfHelpers.polygon([geo]);
+        let a = turfArea.default(polygon);
         totalArea += a;
-      }
-      if(p.tags.leisure !== undefined) {
-        if(p.tags.leisure == 'park') parkCount++;
+
+        if(p.tags.leisure !== undefined) {
+          if(p.tags.leisure == 'park')  {
+            parkTotalArea += a;
+            parkCount++;
+          }
+        }
       }
     });
 
-    res({ greenspace_area: totalArea, park_quantity: parkCount });
+    parkTotalArea = Math.round(parkTotalArea);
+    parkAvg = Math.round(((parkTotalArea / parkCount) + Number.EPSILON) * 100) / 100;
+
+    res({ greenspace_area: totalArea, park_quantity: parkCount, park_area: parkTotalArea, park_average_area: parkAvg });
   });
 }
 
@@ -87,12 +95,12 @@ const BoundaryData = async (city) => {
   if(data[selectedIndex]["geojson"]["type"] == "Polygon" || data[selectedIndex]["geojson"]["type"] == "MultiPolygon") {
     let polygon;
     if(data[selectedIndex]["geojson"]["type"] == "MultiPolygon") {
-      polygon = helpers.multiPolygon(data[selectedIndex]["geojson"]["coordinates"])
+      polygon = turfHelpers.multiPolygon(data[selectedIndex]["geojson"]["coordinates"])
     } else {
-       polygon = helpers.polygon(data[selectedIndex]["geojson"]["coordinates"])
+       polygon = turfHelpers.polygon(data[selectedIndex]["geojson"]["coordinates"])
     }
 
-    let a = Math.round(turf.default(polygon));
+    let a = Math.round(turfArea.default(polygon));
     return { osm_id: data[selectedIndex]["osm_id"], geometry: data[selectedIndex]["geojson"], area: a, area_inaccurate: false };
   } else {
     let dn = await detailsBoundaryData("N", data[selectedIndex]["osm_id"], "place", 0);
@@ -108,11 +116,11 @@ const BoundaryData = async (city) => {
     let dr = await detailsBoundaryData("R", dn["address"][selectedIndex]["osm_id"], "boundary", 1);
     let polygon;
     if(dr["geometry"]["type"] == "MultiPolygon") {
-      polygon = helpers.multiPolygon(dr["geometry"]["coordinates"])
+      polygon = turfHelpers.multiPolygon(dr["geometry"]["coordinates"])
     } else {
-       polygon = helpers.polygon(dr["geometry"]["coordinates"])
+       polygon = turfHelpers.polygon(dr["geometry"]["coordinates"])
     }
-    let a = Math.round(turf.default(polygon));
+    let a = Math.round(turfArea.default(polygon));
     return { osm_id: dr["osm_id"], geometry: dr["geometry"], area: a, area_inaccurate: true };
   }
 

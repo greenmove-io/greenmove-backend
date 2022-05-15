@@ -133,9 +133,11 @@ export const PlaceFetch = async (place) => {
         place.area_inaccurate = bd['area_inaccurate'];
 
         let greenspacePolygons = await overpassAPI(GREENSPACE_OSM(place.osm_id));
-        let { greenspace_area, park_quantity } = await handleGreenspacePolygons(greenspacePolygons.elements);
+        let { greenspace_area, park_quantity, park_area, park_average_area } = await handleGreenspacePolygons(greenspacePolygons.elements);
         place.greenspace_area = Math.round(greenspace_area);
         place.park_quantity = park_quantity;
+        place.park_area = park_area;
+        place.park_average_area = park_average_area;
 
         let busStopsCount = await overpassAPI(BUS_STOPS_OSM(place.osm_id)).catch(err => rej(err));
         place.bus_stop_quantity = Number(busStopsCount.elements[0].tags.num);
