@@ -49,13 +49,12 @@ export const handleGreenspacePolygons = async (polygons) => {
   return new Promise(async (res, rej) => {
     let totalArea = 0;
     let parkTotalArea = 0;
-    let parkAvg = 0;
     let parkCount = 0;
 
     polygons.map(p => {
       if(p.geometry.length > 4) {
         let geo = p['geometry'].map(obj => [obj.lat, obj.lon]);
-        if(geo[0][0] !== geo[geo.length - 1][0] && geo[0][1] !== geo[geo.length - 1][1]) {
+        if(geo[0][0] !== geo[geo.length - 1][0] || geo[0][1] !== geo[geo.length - 1][1]) {
           let c = geo[0];
           geo.push(c)
         }
@@ -74,9 +73,8 @@ export const handleGreenspacePolygons = async (polygons) => {
     });
 
     parkTotalArea = Math.round(parkTotalArea);
-    parkAvg = Math.round(((parkTotalArea / parkCount) + Number.EPSILON) * 100) / 100;
 
-    res({ greenspace_area: totalArea, park_quantity: parkCount, park_area: parkTotalArea, park_average_area: parkAvg });
+    res({ greenspace_area: totalArea, park_quantity: parkCount, park_area: parkTotalArea });
   });
 }
 

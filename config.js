@@ -38,7 +38,6 @@ exports.properties_required_props = [
   'population',
   'park_quantity',
   'park_area',
-  'park_average_area',
   'greenspace_area',
   'bus_stop_quantity',
   'vehicle_quantity',
@@ -56,6 +55,7 @@ exports.qualities_required_props = [
   'greenspace',
   'greenspace_area_ratio',
   'park_area_ratio',
+  'park_average_area',
   'park_population_ratio',
   'bus_stop_population_ratio',
   'vehicle_population_ratio',
@@ -91,6 +91,34 @@ exports.interquartiles = {
     Q3: 0
   },
   population_density: {
+    arr: [],
+    STD: 0,
+    Q1: 0,
+    Q2: 0,
+    Q3: 0
+  },
+  greenspace_area_ratio: {
+    arr: [],
+    STD: 0,
+    Q1: 0,
+    Q2: 0,
+    Q3: 0
+  },
+  park_area_ratio: {
+    arr: [],
+    STD: 0,
+    Q1: 0,
+    Q2: 0,
+    Q3: 0
+  },
+  park_average_area: {
+    arr: [],
+    STD: 0,
+    Q1: 0,
+    Q2: 0,
+    Q3: 0
+  },
+  park_population_ratio: {
     arr: [],
     STD: 0,
     Q1: 0,
