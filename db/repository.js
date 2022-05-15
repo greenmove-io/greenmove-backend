@@ -28,7 +28,6 @@ export class open {
   static async getPlace(id) {
     return dao.get(`
       SELECT
-        places.place_id,
       	places.name,
         places.county,
         places.country,
