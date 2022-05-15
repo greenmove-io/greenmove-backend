@@ -123,14 +123,14 @@ const handleBoundaries = async (places) => {
     const reset = await GitHubAPI.ResetBranch('ce9a79458fa950dde6ef468486893a8ecb47e6e0').catch(err => rej(err));
 
     let treeData = [];
-    places.data.map(place => {
+    for(let i = 0; i < places.data.length; i++) {
       treeData.push({
-        path: `places/boundaries/cities/${place.boundary_id}.json`,
+        path: `places/boundaries/cities/${places.data[i].boundary_id}.json`,
         mode: "100644",
         type: "blob",
-        sha: place.blob.sha
+        sha: places.data[i].blob.sha
       });
-    });
+    }
 
     console.log('PUSHING BOUNDARIES TO GITHUB...');
     const pushedBoundaries = await GitHubAPI.PushBoundary(treeData).catch(err => rej(err));

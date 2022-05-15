@@ -51,9 +51,14 @@ export const handleGreenspacePolygons = async (polygons) => {
     let parkTotalArea = 0;
     let parkCount = 0;
 
-    polygons.map(p => {
-      if(p.geometry.length > 4) {
-        let geo = p['geometry'].map(obj => [obj.lat, obj.lon]);
+    for(let i = 0; i < polygons.length; i++) {
+      if(polygons[i].geometry.length > 4) {
+        let geo =  [];
+
+        for(let j = 0; j < polygons[i]['geometry'].length; j++) {
+          geo.push([polygons[i]['geometry'][j].lat, polygons[i]['geometry'][j].lon]);
+        }
+
         if(geo[0][0] !== geo[geo.length - 1][0] || geo[0][1] !== geo[geo.length - 1][1]) {
           let c = geo[0];
           geo.push(c)
@@ -63,14 +68,14 @@ export const handleGreenspacePolygons = async (polygons) => {
         let a = turfArea.default(polygon);
         totalArea += a;
 
-        if(p.tags.leisure !== undefined) {
-          if(p.tags.leisure == 'park')  {
+        if(polygons[i].tags.leisure !== undefined) {
+          if(polygons[i].tags.leisure == 'park')  {
             parkTotalArea += a;
             parkCount++;
           }
         }
       }
-    });
+    };
 
     parkTotalArea = Math.round(parkTotalArea);
 

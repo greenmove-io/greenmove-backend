@@ -19,6 +19,7 @@ app.use(authMiddleware);
 
 // Database Setup
 ChangeDatabase();
+// console.log(`The script uses approximately ${process.memoryUsage().heapUsed / 1024 / 1024} MB`);
 
 app.use('/places', placesRoute);
 app.post('*', authenticated);

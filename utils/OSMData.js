@@ -9,17 +9,17 @@ export const handlePublicRoutes = async (publicRoutes) => {
       cycling_routes_length: 0,
     }
 
-    publicRoutes.map((route) => {
-      if(route.tags.designation === 'public_footpath' || route.tags.highway === 'path' || route.tags.highway === 'track' || route.tags.highway === 'bridleway')  {
+    for(let i = 0; i < publicRoutes.length; i++) {
+      if(publicRoutes[i].tags.designation === 'public_footpath' || publicRoutes[i].tags.highway === 'path' || publicRoutes[i].tags.highway === 'track' || publicRoutes[i].tags.highway === 'bridleway')  {
         routeData.walking_routes_quantity++;
-        routeData.walking_routes_length += Number(route.tags.length);
+        routeData.walking_routes_length += Number(publicRoutes[i].tags.length);
       }
 
-      if(route.tags.highway === 'yes' || route.tags.bicycle === 'designated') {
+      if(publicRoutes[i].tags.highway === 'yes' || publicRoutes[i].tags.bicycle === 'designated') {
         routeData.cycling_routes_quantity++;
-        routeData.cycling_routes_length += Number(route.tags.length);
+        routeData.cycling_routes_length += Number(publicRoutes[i].tags.length);
       }
-    });
+    }
 
     routeData.walking_routes_length = roundTwoDecimal(routeData.walking_routes_length);
     routeData.cycling_routes_length = roundTwoDecimal(routeData.cycling_routes_length);
