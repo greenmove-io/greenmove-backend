@@ -10,7 +10,7 @@ export class open {
         places.country,
         places.rating,
         places_properties.latitude,
-        places_properties.longitude,
+        places_properties.longitude
       FROM places
       INNER JOIN places_properties ON places_properties.place_id = places.place_id
       ORDER BY places.name ASC
