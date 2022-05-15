@@ -5,12 +5,6 @@ import { Place } from '../modules';
 export const getPlaces = async (req, res) => {
   let places = await open.getPlaces().catch(err => console.error(err));
 
-  places = places.map(x => {
-    let place = new Place();
-    place = place.format(x);
-    return place;
-  });
-
   return res.status(200).send({ status: 'success', data: places });
 }
 
