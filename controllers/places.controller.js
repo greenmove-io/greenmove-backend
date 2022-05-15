@@ -1,5 +1,5 @@
 import { open, closed } from '../db/repository';
-import { GetBoundary } from '../utils/GitHubAPI';
+import GitHubAPI from '../utils/GitHubAPI';
 import { Place } from '../modules';
 
 export const getPlaces = async (req, res) => {
@@ -35,7 +35,7 @@ export const getPlaceBoundary = async (req, res) => {
 
   if(result == undefined) return res.status(400).send({ status: 'fail', message: 'Could not find any place with that ID.' });
 
-  let boundary = await GetBoundary(`places/boundaries/cities/${place.boundary_id}.json`, true).catch(err => console.error(err));
+  let boundary = await GitHubAPI.GetBoundary(`places/boundaries/cities/${result.boundary_id}.json`, true).catch(err => console.error(err));
 
   return res.status(200).send({ status: 'success', data: boundary });
 }
