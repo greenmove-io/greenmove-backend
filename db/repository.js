@@ -8,8 +8,11 @@ export class open {
       	places.name,
         places.county,
         places.country,
-        places.rating
+        places.rating,
+        places_properties.latitude,
+        places_properties.longitude,
       FROM places
+      INNER JOIN places_properties ON places_properties.place_id = places.place_id
       ORDER BY places.name ASC
     `);
   }
@@ -25,6 +28,7 @@ export class open {
   static async getPlace(id) {
     return dao.get(`
       SELECT
+        places.place_id,
       	places.name,
         places.county,
         places.country,
@@ -67,6 +71,7 @@ export class open {
   static async findPlace(q) {
     return dao.get(`
       SELECT
+      places.place_id,
       places.name,
       places.county,
       places.country,
