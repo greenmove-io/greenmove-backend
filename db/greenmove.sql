@@ -1,7 +1,7 @@
--- DROP DATABASE IF EXISTS greenmove;
--- CREATE DATABASE greenmove;
---
--- \c greenmove;
+DROP DATABASE IF EXISTS greenmove;
+CREATE DATABASE greenmove;
+
+\c greenmove;
 
 CREATE TABLE places (
   place_id VARCHAR(16),

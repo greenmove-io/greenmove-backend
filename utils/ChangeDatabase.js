@@ -6,13 +6,14 @@ import { closed } from '../db/repository';
 import CalculateData from './CalculateData';
 import { PlaceFetch, overpassAPI } from './FetchData';
 import GitHubAPI from './GitHubAPI';
-const CITY_DATA = require('../assets/json/uk-cities.json');
+// const CITY_DATA = require('../assets/json/uk-cities.json');
 
 const {
   aqi_levels,
   qualities_ranges,
   interquartiles,
-  GEOJSON_PRESET
+  GEOJSON_PRESET,
+  CITY_DATA
 } = require('../config');
 
 const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
@@ -45,7 +46,7 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
             place.blob = await GitHubAPI.createBlob(gj).catch(err => rej(err));
           }
 
-          // console.log(place);
+          console.log(place);
 
           if(!isUpdating) {
               res({
@@ -164,7 +165,6 @@ const workWithPlaces = async (places) => {
 }
 
 const ChangeDatabase = async () => {
-  return;
   let data = await closed.checkPlacesData();
   const { is_data } = data;
   let places = CITY_DATA;
@@ -181,11 +181,11 @@ const ChangeDatabase = async () => {
   places = await setup(ct, places, is_data);
   places = await workWithPlaces(places);
 
-  places.map(place => place.statements.map(stmt => statements.push(stmt)));
-  closed.changePlaces(statements).then(results => {
-      console.log('Places changed successfully');
-  }).catch(err => {
-      console.error('BATCH FAILED ' + err);
-  });
+  // places.map(place => place.statements.map(stmt => statements.push(stmt)));
+  // closed.changePlaces(statements).then(results => {
+  //     console.log('Places changed successfully');
+  // }).catch(err => {
+  //     console.error('BATCH FAILED ' + err);
+  // });
 }
 export default ChangeDatabase;

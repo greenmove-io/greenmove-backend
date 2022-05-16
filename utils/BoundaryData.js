@@ -87,8 +87,8 @@ const BoundaryData = async (city) => {
   let data = await searchBoundaryData(city);
   let selectedIndex = 0;
   for(let i=0; i < data.length; i++) {
-    if(data[i].category == "boundary") {
-      if(data[i].type == "political" || data[i].type == "administrative") {
+    if(data[i].category == "boundary" || city == "London") {
+      if(data[i].type == "political" || data[i].type == "administrative" || city == "London") {
         selectedIndex = i;
         break;
       }

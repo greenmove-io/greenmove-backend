@@ -286,4 +286,9 @@ exports.CITY_DATA = [
     "country": "England",
     "county": "Cambridgeshire"
   },
+  {
+    "name": "London",
+    "country": "England",
+    "county": "London"
+  },
 ];
