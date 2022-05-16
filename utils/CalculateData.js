@@ -3,10 +3,6 @@ const AQIPercentage = (aqi, maxAQI) => {
    return 100 - ((aqi / 500) * 100);
 }
 
-const PDPercentage = (populationDensity, maxPopulation) => {
-  return 100 - ((populationDensity / maxPopulation) * 100);
-}
-
 const ratio = (v1, v2) => Math.round(v1 / v2);
 
 const ratioTwoDecimal = (v1, v2) => Math.round(((v1 / v2) + Number.EPSILON) * 100) / 100;
@@ -146,4 +142,4 @@ const IQR = (arr) => {
 // https://stackoverflow.com/questions/25835591/how-to-calculate-percentage-between-the-range-of-two-values-a-third-value-is
 const rangePercentage = (min, max, value) => ((value - min) * 100) / (max - min);
 
-export default { AQIPercentage, PDPercentage, ratio, ratioTwoDecimal, rating, quantile, IQR };
+export default { AQIPercentage, rangePercentage, ratio, ratioTwoDecimal, rating, quantile, IQR };
