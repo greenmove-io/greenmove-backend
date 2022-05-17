@@ -2,6 +2,11 @@ import { open, closed } from '../db/repository';
 import GitHubAPI from '../utils/GitHubAPI';
 import { Place } from '../modules';
 
+const {
+  qualities_ranges: qualities_rangesOG,
+  interquartiles: interquartilesOG
+} = require('../config');
+
 export const getPlaces = async (req, res) => {
   let places = await open.getPlaces().catch(err => console.error(err));
 
@@ -22,8 +27,12 @@ export const getPlace = async (req, res) => {
 
   if(result == undefined) return res.status(400).send({ status: 'fail', message: 'Could not find any place with that ID.' });
 
-  let place = new Place();
-  place = place.format(result);
+  let ranges = await closed.getQualitiesRanges(1);
+  let interquartiles = await closed.getQualitiesInterquartiles(1);
+
+  let PlaceHandler = new Place();
+  let place = PlaceHandler.format(result);
+  place = PlaceHandler.percentages(place, ranges.data, interquartiles.data, interquartilesOG);
 
   return res.status(200).send({ status: 'success', data: place });
 }

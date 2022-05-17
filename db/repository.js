@@ -159,12 +159,20 @@ export class closed {
     return dao.run(`INSERT INTO places_qualities_ranges (data) VALUES ($1)`, [data]);
   }
 
+  static async getQualitiesRanges(id) {
+    return dao.get(`SELECT data FROM places_qualities_ranges WHERE id = $1`, [id]);
+  }
+
   static async updateQualitiesRanges(data, id) {
     return dao.run(`UPDATE places_qualities_ranges SET data = $1 WHERE id = $2`, [data, id]);
   }
 
   static async insertQualitiesInterquartiles(data) {
     return dao.run(`INSERT INTO places_qualities_interquartiles (data) VALUES ($1)`, [data]);
+  }
+
+  static async getQualitiesInterquartiles(id) {
+    return dao.get(`SELECT data FROM places_qualities_interquartiles WHERE id = $1`, [id]);
   }
 
   static async updateQualitiesRanges(data, id) {

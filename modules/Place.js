@@ -75,4 +75,25 @@ export default class Place {
 
     return place;
   }
+
+  percentages(place, ranges, interquartiles, interquartilesOG) {
+    place['percentages'] = {};
+
+    Object.keys(interquartiles).forEach(key => {
+      if(place[key] > interquartiles[key].Q3) {
+        place['percentages'][key] = 100;
+      } else if (place[key] > interquartiles[key].Q2) {
+        place['percentages'][key] = 75;
+      } else if (place[key] > interquartiles[key].Q1) {
+        place['percentages'][key] = 50;
+      } else {
+        place['percentages'][key] = 25;
+      }
+
+      if(interquartilesOG[key].isLowerBetter) place['percentages'][key] = 100 - place['percentages'][key];
+      if(place['percentages'][key] < 10) place['percentages'][key] = 15;
+    });
+
+    return place;
+  }
 }
