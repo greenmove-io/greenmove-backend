@@ -28,14 +28,14 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
           place.air_quality_label = aqi_levels.find(x => x[0] > place.air_quality)[1];
           place.population_density = CalculateData.ratio(place.population, (place.area / 1000000));
           place.greenspace_area_ratio = CalculateData.ratioTwoDecimal(place.greenspace_area, place.area);
-          place.park_area_ratio = CalculateData.ratioTwoDecimal(place.park_quantity, (place.area / 1000000));
+          place.park_area_ratio = CalculateData.ratioTwoDecimal(place.park_area, place.area, 1000);
           place.park_average_area = CalculateData.ratioTwoDecimal(place.park_area, place.park_quantity);
-          place.park_population_ratio = CalculateData.ratio(place.population, (place.park_area / 1000000));
-          place.bus_stop_population_ratio = CalculateData.ratio(place.population, place.bus_stop_quantity);
-          if(place.vehicle_quantity !== null) place.vehicle_population_ratio = CalculateData.ratioTwoDecimal(place.vehicle_quantity, place.population);
-          place.bicycle_parking_population_ratio = CalculateData.ratio(place.population, place.bicycle_parking_quantity);
-          place.walking_routes_ratio = CalculateData.ratioTwoDecimal(place.walking_routes_length, (place.area / 1000000));
-          place.cycling_routes_ratio = CalculateData.ratioTwoDecimal(place.cycling_routes_length, (place.area / 1000000));
+          place.park_population_ratio = CalculateData.ratioTwoDecimal(place.park_quantity, place.population, 10000);
+          place.bus_stop_population_ratio = CalculateData.ratioTwoDecimal(place.bus_stop_quantity, place.population, 10000);
+          if(place.vehicle_quantity !== null) place.vehicle_population_ratio = CalculateData.ratioTwoDecimal(place.population, place.vehicle_quantity, 10000);
+          place.bicycle_parking_population_ratio = CalculateData.ratioTwoDecimal(place.bicycle_parking_quantity, place.population, 10000);
+          place.walking_routes_ratio = CalculateData.ratioTwoDecimal(place.walking_routes_length, place.area, 1000);
+          place.cycling_routes_ratio = CalculateData.ratioTwoDecimal(place.cycling_routes_length, place.area, 1000);
 
           if(place.geometry !== null) {
             let gj = GEOJSON_PRESET;
@@ -92,14 +92,11 @@ const setup = async (ct, places, isUpdating) => {
     places.map(async (place, i) => {
       place.last_updated = ct;
       let result = await fillStatement(ct, place, isUpdating, i, places.length);
-      // Object.keys(qualities_ranges).forEach((k, i) => {
-      //   let key = k.slice(4);
-      //   if(i % 2 == 0) {
-      //     if(result[key] < qualities_ranges[k]) qualities_ranges[k] = result[key];
-      //   } else {
-      //     if(result[key] > qualities_ranges[k]) qualities_ranges[k] = result[key];
-      //   }
-      // });
+
+      Object.keys(qualities_ranges).forEach((k, i) => {
+        if(result[k] < qualities_ranges[k].min) qualities_ranges[k].min = result[k];
+        if(result[k] > qualities_ranges[k].max) qualities_ranges[k].max = result[k];
+      });
 
       return result;
     })
@@ -141,7 +138,7 @@ const handleBoundaries = async (places) => {
 
 const handleRating = async (places) => {
   return new Promise(async (res, rej) => {
-    places = places.data.map(place => {
+    places.data = places.data.map(place => {
       place.rating = CalculateData.rating(place, places.interquartiles);
       place.statements.push(["UPDATE places SET rating = $1 WHERE place_id = $2", [place.rating, place.place_id]]);
 
@@ -165,11 +162,10 @@ const workWithPlaces = async (places) => {
 
 const ChangeDatabase = async () => {
   let data = await closed.checkPlacesData();
-  const { is_data } = data;
   let places = CITY_DATA;
   let statements = [];
 
-  if(!is_data) {
+  if(!data[0].is_places) {
     console.log('Filling the database');
   } else {
     console.log(`All city data is set`);
@@ -177,10 +173,20 @@ const ChangeDatabase = async () => {
   }
 
   let ct = parseInt((new Date().getTime() / 1000).toFixed(0));
-  places = await setup(ct, places, is_data);
+  places = await setup(ct, places, data[0].is_places);
   places = await workWithPlaces(places);
 
-  places.map(place => place.statements.map(stmt => statements.push(stmt)));
+  if(places.qualities_ranges !== undefined && places.interquartiles !== undefined) {
+    if(!data[1].is_qualities_ranges && !data[2].is_qualities_interquartiles) {
+      closed.insertQualitiesRanges(JSON.stringify(places.qualities_ranges));
+      closed.insertQualitiesInterquartiles(JSON.stringify(places.interquartiles));
+    } else {
+      closed.updateQualitiesRanges(JSON.stringify(places.qualities_ranges), 1);
+      closed.updateQualitiesInterquartiles(JSON.stringify(places.interquartiles), 1);
+    }
+  }
+
+  places.data.map(place => place.statements.map(stmt => statements.push(stmt)));
   closed.changePlaces(statements).then(results => {
       console.log('Places changed successfully');
   }).catch(err => {

@@ -1,7 +1,7 @@
--- DROP DATABASE IF EXISTS greenmove;
--- CREATE DATABASE greenmove;
---
--- \c greenmove;
+DROP DATABASE IF EXISTS greenmove;
+CREATE DATABASE greenmove;
+
+\c greenmove;
 
 CREATE TABLE places (
   place_id VARCHAR(16),
@@ -49,12 +49,22 @@ CREATE TABLE places_qualities (
   waste_recycling INTEGER,
   park_area_ratio NUMERIC(8, 2),
   park_average_area NUMERIC(16, 2),
-  park_population_ratio BIGINT,
+  park_population_ratio NUMERIC(8, 2),
   vehicle_population_ratio NUMERIC(8, 2),
-  bus_stop_population_ratio BIGINT,
-  bicycle_parking_population_ratio BIGINT,
+  bus_stop_population_ratio NUMERIC(8, 2),
+  bicycle_parking_population_ratio NUMERIC(8, 2),
   walking_routes_ratio NUMERIC(8, 2),
   cycling_routes_ratio NUMERIC(8, 2),
   population_density INTEGER,
   CONSTRAINT fk_place FOREIGN KEY(place_id) REFERENCES places(place_id)
-)
+);
+
+CREATE TABLE places_qualities_ranges (
+  id serial PRIMARY KEY,
+  data json NOT NULL
+);
+
+CREATE TABLE places_qualities_interquartiles (
+  id serial PRIMARY KEY,
+  data json NOT NULL
+);

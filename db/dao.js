@@ -33,4 +33,10 @@ export default class {
     });
 
   }
+
+  static multi(stmt) {
+    return new Promise((res, rej) => {
+      db.multi(stmt).then(result => res(result)).catch(err => rej(err));
+    });
+  }
 }

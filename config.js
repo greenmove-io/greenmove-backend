@@ -66,31 +66,63 @@ exports.qualities_required_props = [
 ];
 
 exports.qualities_ranges = {
-  min_air_quality: 500,
-  max_air_quality: 0,
-  min_population_density: 99999,
-  max_population_density: 0,
-  min_vehicle_population_ratio: 999,
-  max_vehicle_population_ratio: 0,
-  min_bus_stop_population_ratio: 9999,
-  max_bus_stop_population_ratio: 0,
-  min_bicycle_parking_population_ratio: 99999,
-  max_bicycle_parking_population_ratio: 0,
-  min_walking_routes_ratio: 99999,
-  max_walking_routes_ratio: 0,
-  min_cycling_routes_ratio: 99999,
-  max_cycling_routes_ratio: 0
-};
+  air_quality: {
+    min: 500,
+    max: 0
+  },
+  population_density: {
+    min: 99999,
+    max: 0
+  },
+  greenspace_area_ratio: {
+    min: 999,
+    max: 0
+  },
+  park_area_ratio: {
+    min: 9999,
+    max: 0
+  },
+  park_average_area: {
+    min: 9999999,
+    max: 0
+  },
+  park_population_ratio: {
+    min: 9999,
+    max: 0
+  },
+  vehicle_population_ratio: {
+    min: 9999,
+    max: 0
+  },
+  bus_stop_population_ratio: {
+    min: 9999,
+    max: 0
+  },
+  bicycle_parking_population_ratio: {
+    min: 9999,
+    max: 0
+  },
+  walking_routes_ratio: {
+    min: 9999,
+    max: 0
+  },
+  cycling_routes_ratio: {
+    min: 9999,
+    max: 0
+  }
+}
 
 exports.interquartiles = {
   air_quality: {
+    isLowerBetter: true,
     arr: [],
     STD: 0,
     Q1: 0,
     Q2: 0,
-    Q3: 0
+    Q3: 0,
   },
   population_density: {
+    isLowerBetter: true,
     arr: [],
     STD: 0,
     Q1: 0,
@@ -98,20 +130,23 @@ exports.interquartiles = {
     Q3: 0
   },
   greenspace_area_ratio: {
+    isLowerBetter: false,
     arr: [],
     STD: 0,
     Q1: 0,
     Q2: 0,
-    Q3: 0
+    Q3: 0,
   },
   park_area_ratio: {
+    isLowerBetter: false,
     arr: [],
     STD: 0,
     Q1: 0,
     Q2: 0,
-    Q3: 0
+    Q3: 0,
   },
   park_average_area: {
+    isLowerBetter: false,
     arr: [],
     STD: 0,
     Q1: 0,
@@ -119,46 +154,52 @@ exports.interquartiles = {
     Q3: 0
   },
   park_population_ratio: {
+    isLowerBetter: false,
     arr: [],
     STD: 0,
     Q1: 0,
     Q2: 0,
-    Q3: 0
+    Q3: 0,
   },
   vehicle_population_ratio: {
+    isLowerBetter: false,
     arr: [],
     STD: 0,
     Q1: 0,
     Q2: 0,
-    Q3: 0
+    Q3: 0,
   },
   bus_stop_population_ratio: {
+    isLowerBetter: false,
     arr: [],
     STD: 0,
     Q1: 0,
     Q2: 0,
-    Q3: 0
+    Q3: 0,
   },
   bicycle_parking_population_ratio: {
+    isLowerBetter: false,
     arr: [],
     STD: 0,
     Q1: 0,
     Q2: 0,
-    Q3: 0
+    Q3: 0,
   },
   walking_routes_ratio: {
+    isLowerBetter: false,
     arr: [],
     STD: 0,
     Q1: 0,
     Q2: 0,
-    Q3: 0
+    Q3: 0,
   },
   cycling_routes_ratio: {
+    isLowerBetter: false,
     arr: [],
     STD: 0,
     Q1: 0,
     Q2: 0,
-    Q3: 0
+    Q3: 0,
   }
 };
 
@@ -285,10 +326,5 @@ exports.CITY_DATA = [
     "name": "Cambridge",
     "country": "England",
     "county": "Cambridgeshire"
-  },
-  {
-    "name": "London",
-    "country": "England",
-    "county": "London"
-  },
+  }
 ];

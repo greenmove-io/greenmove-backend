@@ -121,7 +121,11 @@ export class closed {
   }
 
   static async checkPlacesData() {
-    return dao.get(`SELECT EXISTS (SELECT name FROM places) as is_data`);
+    return dao.multi(`
+      SELECT EXISTS (SELECT place_id FROM places) as is_places;
+      SELECT EXISTS (SELECT id FROM places_qualities_ranges) as is_ranges;
+      SELECT EXISTS (SELECT id FROM places_qualities_interquartiles) as is_interquartiles;
+    `);
   }
 
   static async getLastUpdated() {
@@ -149,5 +153,21 @@ export class closed {
 
   static async insertVehicleCount(quantity, id) {
     return dao.run(`UPDATE places_properties SET vehicle_quantity = $1 WHERE place_id = $2`, [quantity, id]);
+  }
+
+  static async insertQualitiesRanges(data) {
+    return dao.run(`INSERT INTO places_qualities_ranges (data) VALUES ($1)`, [data]);
+  }
+
+  static async updateQualitiesRanges(data, id) {
+    return dao.run(`UPDATE places_qualities_ranges SET data = $1 WHERE id = $2`, [data, id]);
+  }
+
+  static async insertQualitiesInterquartiles(data) {
+    return dao.run(`INSERT INTO places_qualities_interquartiles (data) VALUES ($1)`, [data]);
+  }
+
+  static async updateQualitiesRanges(data, id) {
+    return dao.run(`UPDATE places_qualities_interquartiles SET data = $1 WHERE id = $2`, [data, id]);
   }
 }
