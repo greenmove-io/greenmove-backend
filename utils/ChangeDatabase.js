@@ -161,12 +161,11 @@ const workWithPlaces = async (places) => {
 }
 
 const ChangeDatabase = async () => {
-  return;
   let data = await closed.checkPlacesData();
   let places = CITY_DATA;
   let statements = [];
 
-  if(!data[0].is_places) {
+  if(!data[0][0].is_places) {
     console.log('Filling the database');
   } else {
     console.log(`All city data is set`);
@@ -174,11 +173,11 @@ const ChangeDatabase = async () => {
   }
 
   let ct = parseInt((new Date().getTime() / 1000).toFixed(0));
-  places = await setup(ct, places, data[0].is_places);
+  places = await setup(ct, places, data[0][0].is_places);
   places = await workWithPlaces(places);
 
   if(places.qualities_ranges !== undefined && places.interquartiles !== undefined) {
-    if(!data[1].is_qualities_ranges && !data[2].is_qualities_interquartiles) {
+    if(!data[1][0].is_ranges && !data[2][0].is_interquartiles) {
       closed.insertQualitiesRanges(JSON.stringify(places.qualities_ranges));
       closed.insertQualitiesInterquartiles(JSON.stringify(places.interquartiles));
     } else {

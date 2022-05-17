@@ -175,7 +175,7 @@ export class closed {
     return dao.get(`SELECT data FROM places_qualities_interquartiles WHERE id = $1`, [id]);
   }
 
-  static async updateQualitiesRanges(data, id) {
+  static async updateQualitiesInterquartiles(data, id) {
     return dao.run(`UPDATE places_qualities_interquartiles SET data = $1 WHERE id = $2`, [data, id]);
   }
 }
