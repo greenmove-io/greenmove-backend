@@ -58,8 +58,12 @@ export default class Place {
     place.park_area = Math.round(((place.park_area / 1000000) + Number.EPSILON) * 100) / 100;
     if(place.vehicle_quantity !== null) place.vehicle_quantity = numberWithCommas(place.vehicle_quantity);
     place.bus_stop_quantity = numberWithCommas(place.bus_stop_quantity);
-    place.walking_routes_length = Number(place.walking_routes_length);
-    place.cycling_routes_length = Number(place.cycling_routes_length);
+    let decimalCount = 2;
+    if(place.walking_routes_length < 100000) decimalCount = 4;
+    place.walking_routes_length = +(place.walking_routes_length / 1000000).toFixed(decimalCount);
+    decimalCount = 2;
+    if(place.cycling_routes_length < 100000) decimalCount = 4;
+    place.cycling_routes_length = +(place.cycling_routes_length / 1000000).toFixed(decimalCount);
 
     place.greenspace_area_ratio = Number(place.greenspace_area_ratio);
     place.park_area_ratio = Number(place.park_area_ratio);
