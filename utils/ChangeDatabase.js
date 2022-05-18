@@ -32,7 +32,7 @@ const fillStatement = async (ct, place, isUpdating, i, placesLength) => {
           place.park_average_area = CalculateData.ratioTwoDecimal(place.park_area, place.park_quantity);
           place.park_population_ratio = CalculateData.ratioTwoDecimal(place.park_quantity, place.population, 10000);
           place.bus_stop_population_ratio = CalculateData.ratioTwoDecimal(place.bus_stop_quantity, place.population, 10000);
-          if(place.vehicle_quantity !== null) place.vehicle_population_ratio = CalculateData.ratioTwoDecimal(place.population, place.vehicle_quantity, 10000);
+          if(place.vehicle_quantity !== null) place.vehicle_population_ratio = CalculateData.ratioTwoDecimal(place.population, place.vehicle_quantity, 1);
           place.bicycle_parking_population_ratio = CalculateData.ratioTwoDecimal(place.bicycle_parking_quantity, place.population, 10000);
           place.walking_routes_ratio = CalculateData.ratioTwoDecimal(place.walking_routes_length, place.area, 1000);
           place.cycling_routes_ratio = CalculateData.ratioTwoDecimal(place.cycling_routes_length, place.area, 1000);
@@ -161,7 +161,6 @@ const workWithPlaces = async (places) => {
 }
 
 const ChangeDatabase = async () => {
-  return;
   let data = await closed.checkPlacesData();
   let places = CITY_DATA;
   let statements = [];

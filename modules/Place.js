@@ -46,6 +46,8 @@ export default class Place {
     this.walking_routes_ratio = 0;
     this.cycling_routes_ratio = 0;
     this.population_density = 0;
+
+    this.decimalCount = 2;
   }
 
   format(place) {
@@ -58,16 +60,17 @@ export default class Place {
     place.park_area = Math.round(((place.park_area / 1000000) + Number.EPSILON) * 100) / 100;
     if(place.vehicle_quantity !== null) place.vehicle_quantity = numberWithCommas(place.vehicle_quantity);
     place.bus_stop_quantity = numberWithCommas(place.bus_stop_quantity);
-    let decimalCount = 2;
-    if(place.walking_routes_length < 100000) decimalCount = 4;
-    place.walking_routes_length = +(place.walking_routes_length / 1000000).toFixed(decimalCount);
-    decimalCount = 2;
-    if(place.cycling_routes_length < 100000) decimalCount = 4;
-    place.cycling_routes_length = +(place.cycling_routes_length / 1000000).toFixed(decimalCount);
+
+    if(place.walking_routes_length < 100000) this.decimalCount = 4;
+    place.walking_routes_length = +(place.walking_routes_length / 1000000).toFixed(this.decimalCount);
+    this.decimalCount = 2;
+    if(place.cycling_routes_length < 100000) this.decimalCount = 4;
+    place.cycling_routes_length = +(place.cycling_routes_length / 1000000).toFixed(this.decimalCount);
 
     place.greenspace_area_ratio = Number(place.greenspace_area_ratio);
     place.park_area_ratio = Number(place.park_area_ratio);
-    place.park_average_area = Number(place.park_average_area);
+    if(place.park_average_area < 100000) this.decimalCount = 4;
+    place.park_average_area = +(place.park_average_area / 1000000).toFixed(this.decimalCount);
     place.park_population_ratio = numberWithCommas(place.park_population_ratio);
     place.vehicle_population_ratio = Number(place.vehicle_population_ratio);
     place.bus_stop_population_ratio = numberWithCommas(place.bus_stop_population_ratio);
