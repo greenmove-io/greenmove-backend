@@ -31,8 +31,8 @@ export const getPlace = async (req, res) => {
   let interquartiles = await closed.getQualitiesInterquartiles(1);
 
   let PlaceHandler = new Place();
-  let place = PlaceHandler.format(result);
-  place = PlaceHandler.percentages(place, ranges.data, interquartiles.data, interquartilesOG);
+  let place = PlaceHandler.percentages(result, ranges.data, interquartiles.data, interquartilesOG);
+  place = PlaceHandler.format(result);
 
   return res.status(200).send({ status: 'success', data: place });
 }
@@ -58,8 +58,12 @@ export const searchPlaces = async (req, res) => {
 
   if(result == undefined) return res.status(400).send({ status: 'fail', message: 'Could not find any places from your search parameters.' });
 
-  let place = new Place();
-  place = place.format(result);
+  let ranges = await closed.getQualitiesRanges(1);
+  let interquartiles = await closed.getQualitiesInterquartiles(1);
+
+  let PlaceHandler = new Place();
+  let place = PlaceHandler.percentages(result, ranges.data, interquartiles.data, interquartilesOG);
+  place = PlaceHandler.format(result);
 
   return res.status(200).send({ status: 'success', data: place });
 }

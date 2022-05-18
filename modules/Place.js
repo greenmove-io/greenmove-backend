@@ -54,7 +54,6 @@ export default class Place {
     place.population = numberWithCommas(place.population);
     place.area = Math.round(((place.area / 1000000) + Number.EPSILON) * 100) / 100;
     place.air_quality = Number(place.air_quality);
-    place.air_quality_percentage = CalculateData.AQIPercentage(place.air_quality);
     place.greenspace_area = Math.round(((place.greenspace_area / 1000000) + Number.EPSILON) * 100) / 100;
     place.park_area = Math.round(((place.park_area / 1000000) + Number.EPSILON) * 100) / 100;
     if(place.vehicle_quantity !== null) place.vehicle_quantity = numberWithCommas(place.vehicle_quantity);
